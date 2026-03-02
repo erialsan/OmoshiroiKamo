@@ -2,22 +2,22 @@ package ruiseki.omoshiroikamo.api.modular.recipe.expression;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
+
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.profiler.Profiler;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.MinecraftException;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldSettings;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.IChunkLoader;
+import net.minecraft.world.storage.IPlayerFileData;
 import net.minecraft.world.storage.ISaveHandler;
 import net.minecraft.world.storage.WorldInfo;
-import net.minecraft.world.MinecraftException;
-import net.minecraft.world.storage.IPlayerFileData;
-
-import java.io.File;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -76,6 +76,7 @@ public class ExpressionEvaluationTest {
     @DisplayName("NbtExpression: TileEntityからNBT値を取得")
     public void testNbtExpressionEvaluation() {
         TileEntity stubTE = new TileEntity() {
+
             @Override
             public void writeToNBT(NBTTagCompound tag) {
                 // super.writeToNBT(tag); // マッピングエラーを避けるために呼ばない
@@ -95,6 +96,7 @@ public class ExpressionEvaluationTest {
     @DisplayName("NbtExpression: NBTが存在しない場合はデフォルト値を返す")
     public void testNbtExpressionMissingKey() {
         TileEntity stubTE = new TileEntity() {
+
             @Override
             public void writeToNBT(NBTTagCompound tag) {
                 // super.writeToNBT(tag);
@@ -110,12 +112,16 @@ public class ExpressionEvaluationTest {
     }
 
     private static class WorldStub extends World {
+
         private final TileEntity te;
 
         public WorldStub(TileEntity te) {
-            super(new StubSaveHandler(), "Stub",
-                    new WorldSettings(0, WorldSettings.GameType.SURVIVAL, true, false, WorldType.DEFAULT),
-                    new StubWorldProvider(), new Profiler());
+            super(
+                new StubSaveHandler(),
+                "Stub",
+                new WorldSettings(0, WorldSettings.GameType.SURVIVAL, true, false, WorldType.DEFAULT),
+                new StubWorldProvider(),
+                new Profiler());
             this.te = te;
         }
 
@@ -141,6 +147,7 @@ public class ExpressionEvaluationTest {
     }
 
     private static class StubWorldProvider extends WorldProvider {
+
         @Override
         public String getDimensionName() {
             return "Stub";
@@ -148,15 +155,16 @@ public class ExpressionEvaluationTest {
     }
 
     private static class StubSaveHandler implements ISaveHandler {
+
         @Override
         public WorldInfo loadWorldInfo() {
-            return new WorldInfo(new WorldSettings(0, WorldSettings.GameType.SURVIVAL, true, false, WorldType.DEFAULT),
-                    "Stub");
+            return new WorldInfo(
+                new WorldSettings(0, WorldSettings.GameType.SURVIVAL, true, false, WorldType.DEFAULT),
+                "Stub");
         }
 
         @Override
-        public void checkSessionLock() throws MinecraftException {
-        }
+        public void checkSessionLock() throws MinecraftException {}
 
         @Override
         public IChunkLoader getChunkLoader(WorldProvider provider) {
@@ -164,12 +172,10 @@ public class ExpressionEvaluationTest {
         }
 
         @Override
-        public void saveWorldInfoWithPlayer(WorldInfo info, NBTTagCompound tag) {
-        }
+        public void saveWorldInfoWithPlayer(WorldInfo info, NBTTagCompound tag) {}
 
         @Override
-        public void saveWorldInfo(WorldInfo info) {
-        }
+        public void saveWorldInfo(WorldInfo info) {}
 
         @Override
         public IPlayerFileData getSaveHandler() {
@@ -177,8 +183,7 @@ public class ExpressionEvaluationTest {
         }
 
         @Override
-        public void flush() {
-        }
+        public void flush() {}
 
         @Override
         public File getWorldDirectory() {

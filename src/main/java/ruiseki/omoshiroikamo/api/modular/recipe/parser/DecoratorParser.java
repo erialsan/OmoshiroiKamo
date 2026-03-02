@@ -9,8 +9,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import ruiseki.omoshiroikamo.api.modular.recipe.core.IModularRecipe;
+import ruiseki.omoshiroikamo.api.modular.recipe.decorator.BonusBlockOutputDecorator;
 import ruiseki.omoshiroikamo.api.modular.recipe.decorator.BonusOutputDecorator;
 import ruiseki.omoshiroikamo.api.modular.recipe.decorator.ChanceRecipeDecorator;
+import ruiseki.omoshiroikamo.api.modular.recipe.decorator.PerPositionProbabilityDecorator;
+import ruiseki.omoshiroikamo.api.modular.recipe.decorator.RandomBlockOutputDecorator;
 import ruiseki.omoshiroikamo.api.modular.recipe.decorator.RequirementDecorator;
 import ruiseki.omoshiroikamo.api.modular.recipe.decorator.WeightedRandomDecorator;
 
@@ -23,6 +26,9 @@ public class DecoratorParser {
         register("bonus", (recipe, json) -> BonusOutputDecorator.fromJson(recipe, json));
         register("requirement", (recipe, json) -> RequirementDecorator.fromJson(recipe, json));
         register("weighted_random", (recipe, json) -> WeightedRandomDecorator.fromJson(recipe, json));
+        register("randomBlockOutput", (recipe, json) -> RandomBlockOutputDecorator.fromJson(recipe, json));
+        register("perPositionProbability", (recipe, json) -> PerPositionProbabilityDecorator.fromJson(recipe, json));
+        register("bonusBlockOutput", (recipe, json) -> BonusBlockOutputDecorator.fromJson(recipe, json));
     }
 
     public static void register(String type, BiFunction<IModularRecipe, JsonObject, IModularRecipe> parser) {

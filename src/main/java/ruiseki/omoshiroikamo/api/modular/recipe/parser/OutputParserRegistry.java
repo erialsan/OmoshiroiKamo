@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import com.google.gson.JsonObject;
 
+import ruiseki.omoshiroikamo.api.modular.recipe.io.BlockOutput;
 import ruiseki.omoshiroikamo.api.modular.recipe.io.EnergyOutput;
 import ruiseki.omoshiroikamo.api.modular.recipe.io.EssentiaOutput;
 import ruiseki.omoshiroikamo.api.modular.recipe.io.FluidOutput;
@@ -27,6 +28,7 @@ public class OutputParserRegistry {
         register("essentia", EssentiaOutput::fromJson);
         register("vis", VisOutput::fromJson);
         register("energy", EnergyOutput::fromJson);
+        register("symbol", BlockOutput::fromJson);
     }
 
     /**

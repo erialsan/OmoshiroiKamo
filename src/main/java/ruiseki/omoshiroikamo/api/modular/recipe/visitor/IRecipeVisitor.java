@@ -1,6 +1,8 @@
 package ruiseki.omoshiroikamo.api.modular.recipe.visitor;
 
 import ruiseki.omoshiroikamo.api.modular.recipe.core.IModularRecipe;
+import ruiseki.omoshiroikamo.api.modular.recipe.io.BlockInput;
+import ruiseki.omoshiroikamo.api.modular.recipe.io.BlockOutput;
 import ruiseki.omoshiroikamo.api.modular.recipe.io.EnergyInput;
 import ruiseki.omoshiroikamo.api.modular.recipe.io.EnergyOutput;
 import ruiseki.omoshiroikamo.api.modular.recipe.io.EssentiaInput;
@@ -53,6 +55,8 @@ public interface IRecipeVisitor {
 
     default void visit(VisInput input) {}
 
+    default void visit(BlockInput input) {}
+
     // --- Outputs ---
 
     default void visit(ItemOutput output) {}
@@ -68,4 +72,6 @@ public interface IRecipeVisitor {
     default void visit(ManaOutput output) {}
 
     default void visit(VisOutput output) {}
+
+    default void visit(BlockOutput output) {}
 }
