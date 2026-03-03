@@ -3,6 +3,7 @@ package ruiseki.omoshiroikamo.module.cows.common.registries;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -21,6 +22,8 @@ public class CowMaterial extends AbstractJsonMaterial {
     public FluidJson fluid;
     public String bgColor;
     public String fgColor;
+    public String tintColor;
+    public String textureOverlay;
     public String spawnType = SpawnType.NORMAL.name();
     public Map<String, String> lang = new HashMap<>();
 
@@ -34,12 +37,14 @@ public class CowMaterial extends AbstractJsonMaterial {
 
         if (json.has("fluid")) {
             // Use Gson to parse FluidJson
-            com.google.gson.Gson gson = new com.google.gson.Gson();
+            Gson gson = new Gson();
             this.fluid = gson.fromJson(json.get("fluid"), FluidJson.class);
         }
 
         this.bgColor = getString(json, "bgColor", null);
         this.fgColor = getString(json, "fgColor", null);
+        this.tintColor = getString(json, "tintColor", null);
+        this.textureOverlay = getString(json, "textureOverlay", null);
         this.spawnType = getString(json, "spawnType", SpawnType.NORMAL.name());
 
         if (json.has("lang")) {
@@ -70,6 +75,8 @@ public class CowMaterial extends AbstractJsonMaterial {
 
         if (bgColor != null) json.addProperty("bgColor", bgColor);
         if (fgColor != null) json.addProperty("fgColor", fgColor);
+        if (tintColor != null) json.addProperty("tintColor", tintColor);
+        if (textureOverlay != null) json.addProperty("textureOverlay", textureOverlay);
         json.addProperty("spawnType", spawnType);
 
         if (!lang.isEmpty()) {
@@ -96,6 +103,10 @@ public class CowMaterial extends AbstractJsonMaterial {
                 return fluid;
             case "spawnType":
                 return spawnType;
+            case "tintColor":
+                return tintColor;
+            case "textureOverlay":
+                return textureOverlay;
             default:
                 return null;
         }
@@ -118,6 +129,12 @@ public class CowMaterial extends AbstractJsonMaterial {
                 break;
             case "spawnType":
                 spawnType = (String) value;
+                break;
+            case "tintColor":
+                tintColor = (String) value;
+                break;
+            case "textureOverlay":
+                textureOverlay = (String) value;
                 break;
         }
     }

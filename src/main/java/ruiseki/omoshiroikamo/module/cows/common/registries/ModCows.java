@@ -65,6 +65,7 @@ public class ModCows {
         addModAddon(new BigReactorsCows());
         addModAddon(new MineFactoryReloadedCows());
         addModAddon(new OriginalCows());
+        addModAddon(new FluidCowsHandler());
     }
 
     private static List<BiomeGenBase> getAllSpawnBiomes() {

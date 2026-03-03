@@ -3,6 +3,7 @@ package ruiseki.omoshiroikamo.core.integration.nei;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -120,6 +121,21 @@ public class NEIConfig implements IConfigureNEI {
             registerHandlerImage(event, ChickenBreedingRecipeHandler.UID, "nei/chicken/breeding_icon.png", 64, 6);
             registerHandlerImage(event, ChickenDropsRecipeHandler.UID, "nei/chicken/drops_icon.png", 64, 6);
             registerHandlerImage(event, ChickenThrowsRecipeHandler.UID, "nei/chicken/throws_icon.png", 64, 6);
+        }
+
+        if (BackportConfigs.enableCows) {
+            event.registerHandlerInfo(
+                new HandlerInfo.Builder(CowMilkingRecipeHandler.UID, LibMisc.MOD_NAME, LibMisc.MOD_ID)
+                    .setDisplayStack(new ItemStack(Items.milk_bucket))
+                    .setHeight(64)
+                    .setWidth(166)
+                    .build());
+            event.registerHandlerInfo(
+                new HandlerInfo.Builder(CowBreedingRecipeHandler.UID, LibMisc.MOD_NAME, LibMisc.MOD_ID)
+                    .setDisplayStack(new ItemStack(Items.wheat))
+                    .setHeight(64)
+                    .setWidth(166)
+                    .build());
         }
 
         if (BackportConfigs.enableDML) {

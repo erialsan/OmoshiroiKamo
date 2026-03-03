@@ -123,6 +123,14 @@ public abstract class BaseCowHandler {
 
                         cow.setEnabled(data.enabled);
                         cow.setFluid(milk);
+
+                        if (data.tintColor != null) {
+                            cow.setTintColor(JsonUtils.resolveColor(data.tintColor, 0xFFFFFF));
+                        }
+                        if (data.textureOverlay != null) {
+                            cow.setTextureOverlay(new ResourceLocation(data.textureOverlay));
+                        }
+
                         if (data.lang != null) {
                             String langKey = "entity." + data.name + ".name";
                             JsonUtils.registerLang(langKey, data.lang);
@@ -190,6 +198,11 @@ public abstract class BaseCowHandler {
         mat.enabled = true;
         mat.bgColor = String.format("0x%06X", cow.getBgColor() & 0xFFFFFF);
         mat.fgColor = String.format("0x%06X", cow.getFgColor() & 0xFFFFFF);
+        mat.tintColor = String.format("0x%06X", cow.getTintColor() & 0xFFFFFF);
+        if (cow.getTextureOverlay() != null) {
+            mat.textureOverlay = cow.getTextureOverlay()
+                .toString();
+        }
         mat.spawnType = cow.getSpawnType() != null ? cow.getSpawnType()
             .name() : "NORMAL";
 
