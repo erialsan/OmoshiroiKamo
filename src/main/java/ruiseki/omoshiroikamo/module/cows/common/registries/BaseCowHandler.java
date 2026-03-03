@@ -34,6 +34,7 @@ public abstract class BaseCowHandler {
     protected String configFileName;
 
     private boolean needsMod = true;
+    protected final List<CowsRegistryItem> registeredCows = new ArrayList<>();
 
     public BaseCowHandler(String modID, String modName, String texturesLocation) {
         this.modID = modID;
@@ -123,6 +124,7 @@ public abstract class BaseCowHandler {
 
                         cow.setEnabled(data.enabled);
                         cow.setFluid(milk);
+                        cow.setFluidString(data.fluid.name);
 
                         if (data.tintColor != null) {
                             cow.setTintColor(JsonUtils.resolveColor(data.tintColor, 0xFFFFFF));
@@ -141,6 +143,7 @@ public abstract class BaseCowHandler {
                             new ModCompatInformation(this.getModID(), "", this.getModName()));
 
                         allCows.add(cow);
+                        registeredCows.add(cow);
                     }
 
                 } catch (Exception e) {
@@ -275,6 +278,31 @@ public abstract class BaseCowHandler {
             }
         } else {
             Logger.info("No new cows to add to config: {}", file.getName());
+        }
+    }
+
+    /**
+     * Synchronizes the current memory state back to the config file.
+     * This is useful when colors are dynamically updated after loading.
+     */
+    public void syncConfig() {
+        if (registeredCows.isEmpty()) return;
+
+        File configDir = new File("config/" + LibMisc.MOD_ID + "/cow/");
+        File configFile = new File(configDir, configFileName);
+
+        try {
+            List<CowMaterial> materials = new ArrayList<>();
+            for (CowsRegistryItem cow : registeredCows) {
+                CowMaterial mat = toCowMaterial(cow);
+                if (mat != null) {
+                    materials.add(mat);
+                }
+            }
+            new CowJsonWriter(configFile).write(materials);
+            Logger.info("Synchronized configuration for {} cows in {}", registeredCows.size(), configFileName);
+        } catch (Exception e) {
+            Logger.error("Failed to synchronize config {}: {}", configFileName, e.getMessage());
         }
     }
 }

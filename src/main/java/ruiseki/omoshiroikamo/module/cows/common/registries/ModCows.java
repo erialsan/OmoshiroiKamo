@@ -112,4 +112,15 @@ public class ModCows {
             CowsRegistry.INSTANCE.register(cow);
         }
     }
+
+    /**
+     * Saves all handled cows back to their respective JSON files.
+     */
+    public static void saveAllConfigs() {
+        for (BaseCowHandler handler : registeredModAddons) {
+            if (handler != null) {
+                handler.syncConfig();
+            }
+        }
+    }
 }
