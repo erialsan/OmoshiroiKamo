@@ -8,7 +8,6 @@ import java.util.List;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
-import ruiseki.omoshiroikamo.api.entity.dml.LivingRegistry;
 import ruiseki.omoshiroikamo.api.entity.dml.LivingRegistryItem;
 import ruiseki.omoshiroikamo.core.json.AbstractJsonReader;
 
@@ -20,15 +19,7 @@ public class DMLLivingMatterReader extends AbstractJsonReader<List<LivingRegistr
 
     public List<LivingRegistryItem> readDefault(List<LivingRegistryItem> defaults) {
         this.cache = defaults;
-        register();
-        // Return cache for writer if needed
         return this.cache;
-    }
-
-    private void register() {
-        if (this.cache != null) {
-            this.cache.forEach(LivingRegistry.INSTANCE::register);
-        }
     }
 
     @Override
@@ -44,10 +35,21 @@ public class DMLLivingMatterReader extends AbstractJsonReader<List<LivingRegistr
             }
         }
 
-        // Register to the DML Registry
-        register();
+        // Normalize
+        this.cache.forEach(this::normalizeLiving);
 
         return cache;
+    }
+
+    private void normalizeLiving(LivingRegistryItem item) {
+        if (item.getTexture() == null) {
+            item.setTexture(
+                "omoshiroikamo:dml/living/" + item.getDisplayName()
+                    .toLowerCase());
+        } else if (!item.getTexture()
+            .contains(":")) {
+                item.setTexture("omoshiroikamo:" + item.getTexture());
+            }
     }
 
     @Override

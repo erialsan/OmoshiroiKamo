@@ -8,7 +8,6 @@ import java.util.List;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
-import ruiseki.omoshiroikamo.api.entity.dml.ModelTierRegistry;
 import ruiseki.omoshiroikamo.api.entity.dml.ModelTierRegistryItem;
 import ruiseki.omoshiroikamo.core.json.AbstractJsonReader;
 
@@ -20,14 +19,7 @@ public class DMLModelTierReader extends AbstractJsonReader<List<ModelTierRegistr
 
     public List<ModelTierRegistryItem> readDefault(List<ModelTierRegistryItem> defaults) {
         this.cache = defaults;
-        register();
         return this.cache;
-    }
-
-    private void register() {
-        if (this.cache != null) {
-            this.cache.forEach(ModelTierRegistry.INSTANCE::register);
-        }
     }
 
     @Override
@@ -42,9 +34,6 @@ public class DMLModelTierReader extends AbstractJsonReader<List<ModelTierRegistr
                 this.cache.addAll(readFile(path));
             }
         }
-
-        // Register to the DML Registry
-        register();
 
         return cache;
     }

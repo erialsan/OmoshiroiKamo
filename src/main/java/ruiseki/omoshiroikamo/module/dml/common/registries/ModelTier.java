@@ -9,6 +9,7 @@ import ruiseki.omoshiroikamo.api.entity.dml.ModelTierRegistryItem;
 import ruiseki.omoshiroikamo.core.common.util.Logger;
 import ruiseki.omoshiroikamo.core.lib.LibMisc;
 import ruiseki.omoshiroikamo.module.dml.recipe.DMLModelTierReader;
+import ruiseki.omoshiroikamo.module.dml.recipe.DMLModelTierWriter;
 
 public class ModelTier {
 
@@ -24,6 +25,11 @@ public class ModelTier {
 
         if (!configFile.exists()) {
             List<ModelTierRegistryItem> defaultModels = registerTiers();
+            try {
+                new DMLModelTierWriter(configFile).write(defaultModels);
+            } catch (IOException e) {
+                Logger.error("Failed to write default config {}: {}", configFileName, e.getMessage());
+            }
             return reader.readDefault(defaultModels);
         }
 

@@ -88,8 +88,8 @@ public class DataModel {
         setKillCount(i, stack);
         setTotalKillCount(getTotalKillCount(stack) + 1, stack);
 
-        if (DataModelExperience.shouldIncreaseTier(tier, i, getSimulationCount(stack))) {
-            String nextTierName = LibMisc.LANG.localize(DataModelExperience.getTierName(tier + 1));
+        if (ModelTierRegistry.INSTANCE.shouldIncreaseTier(tier, i, getSimulationCount(stack))) {
+            String nextTierName = LibMisc.LANG.localize(ModelTierRegistry.INSTANCE.getTierName(tier + 1));
             String entityName = LibMisc.LANG.localize(
                 ModelRegistry.INSTANCE.getByType(getId(stack))
                     .getDisplayName());
@@ -109,7 +109,7 @@ public class DataModel {
 
         setTotalSimulationCount(getTotalSimulationCount(stack) + 1, stack);
 
-        if (DataModelExperience.shouldIncreaseTier(tier, getKillCount(stack), i)) {
+        if (ModelTierRegistry.INSTANCE.shouldIncreaseTier(tier, getKillCount(stack), i)) {
             setKillCount(0, stack);
             setSimulationCount(0, stack);
             setTier(tier + 1, stack);
@@ -223,7 +223,7 @@ public class DataModel {
     }
 
     public static String getTierName(ItemStack stack) {
-        return LibMisc.LANG.localize(DataModelExperience.getTierName(getTier(stack)));
+        return LibMisc.LANG.localize(ModelTierRegistry.INSTANCE.getTierName(getTier(stack)));
     }
 
     public static String getMatterTypeName(ItemStack stack) {
@@ -238,7 +238,7 @@ public class DataModel {
     }
 
     public static boolean isMaxTier(ItemStack stack) {
-        return DataModelExperience.isMaxTier(getTier(stack));
+        return ModelTierRegistry.INSTANCE.isMaxTier(getTier(stack));
     }
 
     public static boolean isDataModelMatchesLivingMatter(ItemStack modelStack, ItemStack livingMatterStack) {
@@ -255,20 +255,20 @@ public class DataModel {
     }
 
     public static int getCurrentTierSimulationCountWithKills(ItemStack stack) {
-        return DataModelExperience
+        return ModelTierRegistry.INSTANCE
             .getCurrentTierSimulationCountWithKills(getTier(stack), getKillCount(stack), getSimulationCount(stack));
     }
 
     public static int getSimulationsToNextTier(ItemStack stack) {
-        return DataModelExperience
+        return ModelTierRegistry.INSTANCE
             .getSimulationsToNextTier(getTier(stack), getKillCount(stack), getSimulationCount(stack));
     }
 
     public static int getTierRoof(ItemStack stack) {
-        return DataModelExperience.getTierRoof(getTier(stack), false);
+        return ModelTierRegistry.INSTANCE.getTierRoof(getTier(stack), false);
     }
 
     public static int getKillMultiplier(ItemStack stack) {
-        return DataModelExperience.getKillMultiplier(getTier(stack));
+        return ModelTierRegistry.INSTANCE.getKillMultiplier(getTier(stack));
     }
 }

@@ -8,7 +8,6 @@ import java.util.List;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
-import ruiseki.omoshiroikamo.api.entity.dml.ModelRegistry;
 import ruiseki.omoshiroikamo.api.entity.dml.ModelRegistryItem;
 import ruiseki.omoshiroikamo.core.json.AbstractJsonReader;
 import ruiseki.omoshiroikamo.core.lib.LibResources;
@@ -32,24 +31,30 @@ public class DMLBaseModelReader extends AbstractJsonReader<List<ModelRegistryIte
             }
         }
 
-        // Register to the DML Registry and Normalize
-        this.cache.forEach(model -> {
-            normalizeModel(model);
-            ModelRegistry.INSTANCE.register(model);
-        });
+        // Normalize
+        this.cache.forEach(this::normalizeModel);
 
         return cache;
     }
 
     private void normalizeModel(ModelRegistryItem model) {
         // Texture normalization
-        if (model.getTexture() != null && !model.getTexture().contains(":")) {
-            model.setTexture(LibResources.PREFIX_MOD + model.getTexture());
-        }
-        if (model.getPristineTexture() != null && !model.getPristineTexture().contains(":")) {
-            model.setPristineTexture(
-                    LibResources.PREFIX_MOD + model.getPristineTexture());
-        }
+        if (model.getTexture() == null) {
+            model.setTexture(
+                LibResources.PREFIX_MOD + "dml/model/base/"
+                    + model.getDisplayName()
+                        .toLowerCase());
+        } else if (!model.getTexture()
+            .contains(":")) {
+                model.setTexture(LibResources.PREFIX_MOD + model.getTexture());
+            }
+
+        if (model.getPristineTexture() == null) {
+            model.setPristineTexture(model.getTexture() + "_pristine");
+        } else if (!model.getPristineTexture()
+            .contains(":")) {
+                model.setPristineTexture(LibResources.PREFIX_MOD + model.getPristineTexture());
+            }
     }
 
     @Override

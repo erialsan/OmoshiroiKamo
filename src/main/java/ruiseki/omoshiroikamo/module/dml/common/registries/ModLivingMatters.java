@@ -10,6 +10,7 @@ import ruiseki.omoshiroikamo.core.common.util.Logger;
 import ruiseki.omoshiroikamo.core.lib.LibMisc;
 import ruiseki.omoshiroikamo.core.lib.LibResources;
 import ruiseki.omoshiroikamo.module.dml.recipe.DMLLivingMatterReader;
+import ruiseki.omoshiroikamo.module.dml.recipe.DMLLivingMatterWriter;
 
 public class ModLivingMatters {
 
@@ -26,8 +27,11 @@ public class ModLivingMatters {
 
         if (!configFile.exists()) {
             List<LivingRegistryItem> defaultModels = registerLivings();
-            // Default writer for LivingMatter (needs implementation or stub)
-            // For now, reader.readDefault is suitable for registration + cache
+            try {
+                new DMLLivingMatterWriter(configFile).write(defaultModels);
+            } catch (IOException e) {
+                Logger.error("Failed to write default config {}: {}", configFileName, e.getMessage());
+            }
             return reader.readDefault(defaultModels);
         }
 

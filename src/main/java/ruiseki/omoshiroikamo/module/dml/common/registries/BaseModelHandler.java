@@ -88,9 +88,9 @@ public abstract class BaseModelHandler {
     public ModelRegistryItem addModel(String displayName, int id, String texture, String entityDisplay,
         float numberOfHearts, float interfaceScale, int interfaceOffsetX, int interfaceOffsetY, String[] mobTrivia) {
 
-        int finalID = id > 0 ? id : fixedID(displayName);
+        int finalID = id >= 0 ? id : fixedID(displayName);
 
-        return new ModelRegistryItem(
+        ModelRegistryItem item = new ModelRegistryItem(
             finalID,
             displayName,
             LibResources.PREFIX_MOD + "dml/model/" + this.texturesLocation + texture,
@@ -100,5 +100,10 @@ public abstract class BaseModelHandler {
             interfaceOffsetX,
             interfaceOffsetY,
             mobTrivia);
+
+        item.setPristineTexture(
+            LibResources.PREFIX_MOD + "dml/pristine/" + this.texturesLocation + "pristine_matter_" + texture);
+
+        return item;
     }
 }
