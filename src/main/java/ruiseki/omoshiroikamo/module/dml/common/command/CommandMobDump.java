@@ -84,12 +84,29 @@ public class CommandMobDump extends CommandMod {
         World world = sender.getEntityWorld();
         for (Class<? extends EntityLivingBase> clazz : targetClasses) {
             try {
-                dumpMob(clazz, writer, world);
+                String entityName = (String) EntityList.classToStringMapping.get(clazz);
+                if (entityName == null) entityName = clazz.getSimpleName();
+
+                // Determine ModID
+                String modId = "minecraft";
+                int dotIndex = entityName.indexOf('.');
+                if (dotIndex != -1) {
+                    modId = entityName.substring(0, dotIndex);
+                }
+
+                // Create individual directory for this mob: [ModID]/[MobName]
+                String safeMobName = entityName.replaceAll("[:\\\\/*?\"<>|]", "_");
+                File mobDir = new File(baseDir, modId + "/" + safeMobName);
+                if (!mobDir.exists()) mobDir.mkdirs();
+
+                MobDataWriter mobWriter = new MobDataWriter(mobDir);
+                dumpMob(clazz, mobWriter, world, entityName);
                 count++;
             } catch (Exception e) {
                 sender.addChatMessage(
                     new ChatComponentText(
                         EnumChatFormatting.RED + "Failed to dump " + clazz.getSimpleName() + ": " + e.getMessage()));
+                Logger.error("Failed to dump " + clazz.getSimpleName(), e);
             }
         }
 
@@ -98,18 +115,18 @@ public class CommandMobDump extends CommandMod {
                 EnumChatFormatting.GREEN + "Successfully dumped " + count + " mob(s) to " + baseDir.getPath()));
     }
 
-    private void dumpMob(Class<? extends EntityLivingBase> clazz, MobDataWriter writer, World world) throws Exception {
+    private void dumpMob(Class<? extends EntityLivingBase> clazz, MobDataWriter writer, World world, String name)
+        throws Exception {
         EntityLivingBase dummy = (EntityLivingBase) clazz.getConstructor(World.class)
             .newInstance(world);
-
-        String name = (String) EntityList.classToStringMapping.get(clazz);
-        if (name == null) name = clazz.getSimpleName();
 
         double maxHealth = dummy.getEntityAttribute(SharedMonsterAttributes.maxHealth)
             .getBaseValue();
 
         String texturePath = OmoshiroiKamo.proxy.getEntityTexturePath(clazz, dummy);
         if (texturePath != null) {
+            // Internal texture dumper logic might need adjustment, but we pass the specific
+            // mobDir here
             OmoshiroiKamo.proxy.dumpTexture(writer.getBaseDir(), texturePath);
         }
 

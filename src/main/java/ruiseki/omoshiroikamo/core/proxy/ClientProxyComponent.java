@@ -181,7 +181,9 @@ public abstract class ClientProxyComponent extends CommonProxyComponent implemen
                 .getInputStream();
 
             String resourcePath = res.getResourcePath();
-            File target = new File(baseDir, "textures/" + res.getResourceDomain() + "/" + resourcePath);
+            // Get just the filename from the path
+            String fileName = new File(resourcePath).getName();
+            File target = new File(baseDir, fileName);
 
             File parent = target.getParentFile();
             if (parent != null && !parent.exists()) {
