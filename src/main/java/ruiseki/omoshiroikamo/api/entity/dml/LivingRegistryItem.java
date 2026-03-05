@@ -69,6 +69,7 @@ public class LivingRegistryItem extends AbstractJsonMaterial {
     }
 
     public String getItemName() {
-        return "item.living_matter." + displayName + ".name";
+        String name = displayName != null ? displayName : "Unknown";
+        return "item.living_matter." + name + ".name";
     }
 }

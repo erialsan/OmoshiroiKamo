@@ -89,10 +89,11 @@ public class DataModel {
         setTotalKillCount(getTotalKillCount(stack) + 1, stack);
 
         if (ModelTierRegistry.INSTANCE.shouldIncreaseTier(tier, i, getSimulationCount(stack))) {
+            ModelRegistryItem model = ModelRegistry.INSTANCE.getByType(getId(stack));
+            if (model == null) return;
+
             String nextTierName = LibMisc.LANG.localize(ModelTierRegistry.INSTANCE.getTierName(tier + 1));
-            String entityName = LibMisc.LANG.localize(
-                ModelRegistry.INSTANCE.getByType(getId(stack))
-                    .getDisplayName());
+            String entityName = LibMisc.LANG.localize(model.getDisplayName());
             String message = LibMisc.LANG.localize("tooltip.data_model.reached_tier", entityName, nextTierName);
             player.addChatMessage(new ChatComponentText(message));
             setKillCount(0, stack);
@@ -234,7 +235,7 @@ public class DataModel {
         LivingRegistryItem item = LivingRegistry.INSTANCE.getByType(
             model.getLivingMatter()
                 .getItemDamage());
-        return LibMisc.LANG.localize(item.getItemName());
+        return item == null ? "Unknown" : LibMisc.LANG.localize(item.getItemName());
     }
 
     public static boolean isMaxTier(ItemStack stack) {

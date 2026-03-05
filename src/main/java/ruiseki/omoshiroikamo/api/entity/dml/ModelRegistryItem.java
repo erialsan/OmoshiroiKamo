@@ -220,7 +220,8 @@ public class ModelRegistryItem extends AbstractJsonMaterial {
     }
 
     public String getItemName() {
-        return "item.model." + displayName + ".name";
+        String name = displayName != null ? displayName : "Unknown";
+        return "item.model." + name + ".name";
     }
 
     public String getPristineName() {
