@@ -11,10 +11,13 @@ import net.minecraftforge.common.util.Constants;
 import ruiseki.omoshiroikamo.api.condition.ConditionContext;
 import ruiseki.omoshiroikamo.api.modular.IModularPort;
 import ruiseki.omoshiroikamo.api.modular.IPortType;
+import ruiseki.omoshiroikamo.api.recipe.context.IRecipeContext;
 import ruiseki.omoshiroikamo.api.recipe.core.AbstractRecipeProcess;
 import ruiseki.omoshiroikamo.api.recipe.core.IModularRecipe;
+import ruiseki.omoshiroikamo.api.recipe.io.BlockInput;
 import ruiseki.omoshiroikamo.api.recipe.io.EnergyInput;
 import ruiseki.omoshiroikamo.api.recipe.io.EnergyOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.IRecipeInput;
 import ruiseki.omoshiroikamo.api.recipe.io.IRecipeOutput;
 import ruiseki.omoshiroikamo.api.recipe.io.ManaInput;
 import ruiseki.omoshiroikamo.api.recipe.io.ManaOutput;
@@ -23,21 +26,24 @@ import ruiseki.omoshiroikamo.api.recipe.visitor.RecipeExecutionVisitor;
 
 public class ProcessAgent extends AbstractRecipeProcess {
 
-    private List<IModularPort> currentInputPorts; // Temporary holder for visitor usage during start
+    private final IRecipeContext context;
 
-    public ProcessAgent() {
+    public ProcessAgent(IRecipeContext context) {
+        this.context = context;
         reset();
+    }
+
+    public IRecipeContext getContext() {
+        return context;
     }
 
     @Override
     protected void onStart(IModularRecipe recipe, List<IModularPort> inputPorts) {
-        this.currentInputPorts = inputPorts;
-
         // 1. Check inputs (This is still needed here or in start override)
     }
 
     // Re-implement start to return boolean and handle validation
-    public boolean startRecipe(IModularRecipe recipe, List<IModularPort> inputPorts) {
+    public boolean startRecipe(IModularRecipe recipe, List<IModularPort> inputPorts, List<IModularPort> outputPorts) {
         if (isRunning()) return false;
 
         // 1. Check inputs
@@ -57,7 +63,12 @@ public class ProcessAgent extends AbstractRecipeProcess {
         clearCaches();
 
         // 3. Cache outputs
-        recipe.accept(new RecipeExecutionVisitor(RecipeExecutionVisitor.Mode.CACHE, null, this));
+        RecipeExecutionVisitor cacheVisitor = new RecipeExecutionVisitor(
+            RecipeExecutionVisitor.Mode.CACHE,
+            outputPorts,
+            this);
+        recipe.accept(cacheVisitor);
+        if (!cacheVisitor.isSatisfied()) return false;
 
         return true;
     }
@@ -116,15 +127,35 @@ public class ProcessAgent extends AbstractRecipeProcess {
         if (manaOutputPerTick > 0 && !new ManaOutput(manaOutputPerTick, true).process(outputPorts, true))
             return TickResult.OUTPUT_FULL;
 
+        // 2.5. Continuous block condition check
+        if (currentRecipe != null) {
+            RecipeExecutionVisitor checker = new RecipeExecutionVisitor(
+                RecipeExecutionVisitor.Mode.CHECK,
+                inputPorts,
+                this);
+            for (IRecipeInput input : currentRecipe.getInputs()) {
+                if (input instanceof BlockInput) {
+                    BlockInput bi = (BlockInput) input;
+                    // Skip check if the block was consumed or replaced at start
+                    if (bi.isConsume() || bi.getReplace() != null) continue;
+
+                    input.accept(checker);
+                    if (!checker.isSatisfied()) {
+                        return TickResult.BLOCK_MISSING;
+                    }
+                }
+            }
+        }
+
         // 3. Execute base tick (handles conditions, progress, and actual consumption)
         super.executeTick(inputPorts, outputPorts, context);
 
-        // 4. Handle per-tick energy/mana outputs (since base doesn't know about them specifically)
+        // 4. Handle per-tick energy/mana outputs
         if (energyOutputPerTick > 0) new EnergyOutput(energyOutputPerTick, true).process(outputPorts, false);
         if (manaOutputPerTick > 0) new ManaOutput(manaOutputPerTick, true).process(outputPorts, false);
 
         if (isWaitingForOutput()) return TickResult.READY_OUTPUT;
-        if (!isRunning()) return TickResult.IDLE; // Could be aborted by condition
+        if (!isRunning()) return TickResult.IDLE;
 
         return TickResult.CONTINUE;
     }
@@ -261,6 +292,17 @@ public class ProcessAgent extends AbstractRecipeProcess {
         return "Unknown";
     }
 
+    public boolean diagnoseBlockOutputFull(List<IModularPort> outputPorts) {
+        if (currentRecipe != null) {
+            for (IRecipeOutput output : currentRecipe.getOutputs()) {
+                if (output.getPortType() == IPortType.Type.BLOCK && !output.process(outputPorts, true)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public void writeToNBT(NBTTagCompound nbt) {
         nbt.setInteger("progress", progress);
         nbt.setInteger("maxProgress", maxProgress);
@@ -330,6 +372,8 @@ public class ProcessAgent extends AbstractRecipeProcess {
         NO_MATCHING_RECIPE,
         OUTPUT_FULL,
         PAUSED,
-        NO_MANA
+        NO_MANA,
+        BLOCK_MISSING,
+        BLOCK_OUTPUT_FULL
     }
 }

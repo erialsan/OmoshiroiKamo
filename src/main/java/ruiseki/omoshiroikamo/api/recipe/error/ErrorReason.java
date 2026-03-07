@@ -20,7 +20,9 @@ public enum ErrorReason {
     PAUSED("paused", "Paused by Redstone"),
     MISSING_BLUEPRINT("missing_blueprint", "No Blueprint"),
     OUTPUT_CAPACITY_INSUFFICIENT("output_capacity_insufficient", "Output Capacity Insufficient"),
-    NO_MANA("no_mana", "Insufficient Mana");
+    NO_MANA("no_mana", "Insufficient Mana"),
+    BLOCK_MISSING("block_missing", "Block missing"),
+    BLOCK_OUTPUT_FULL("block_output_full", "No space for Block");
 
     private final String id;
     private final String defaultMessage;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -95,6 +96,7 @@ public class StructureAgent {
         structureBlockPositions.clear();
         controller.getPortManager()
             .clear();
+        controller.clearSymbolPositions();
     }
 
     private void sendClearPacket(Collection<ChunkCoordinates> positions) {
@@ -415,6 +417,24 @@ public class StructureAgent {
             list.appendTag(tag);
         }
         nbt.setTag("structureBlocks", list);
+
+        NBTTagList symbolsList = new NBTTagList();
+        for (Map.Entry<Character, List<ChunkCoordinates>> entry : controller.getSymbolPositionsMap()
+            .entrySet()) {
+            NBTTagCompound tag = new NBTTagCompound();
+            tag.setString("sym", String.valueOf(entry.getKey()));
+            NBTTagList posList = new NBTTagList();
+            for (ChunkCoordinates pos : entry.getValue()) {
+                NBTTagCompound ptag = new NBTTagCompound();
+                ptag.setInteger("x", pos.posX);
+                ptag.setInteger("y", pos.posY);
+                ptag.setInteger("z", pos.posZ);
+                posList.appendTag(ptag);
+            }
+            tag.setTag("posList", posList);
+            symbolsList.appendTag(tag);
+        }
+        nbt.setTag("symbolPositions", symbolsList);
     }
 
     public boolean readFromNBT(NBTTagCompound nbt) {
@@ -432,6 +452,22 @@ public class StructureAgent {
                     .add(new ChunkCoordinates(tag.getInteger("x"), tag.getInteger("y"), tag.getInteger("z")));
             }
             loadedBlocks = !structureBlockPositions.isEmpty();
+        }
+
+        controller.clearSymbolPositions();
+        if (nbt.hasKey("symbolPositions")) {
+            NBTTagList symbolsList = nbt.getTagList("symbolPositions", 10);
+            for (int i = 0; i < symbolsList.tagCount(); i++) {
+                NBTTagCompound tag = symbolsList.getCompoundTagAt(i);
+                char sym = tag.getString("sym")
+                    .charAt(0);
+                NBTTagList posList = tag.getTagList("posList", 10);
+                for (int j = 0; j < posList.tagCount(); j++) {
+                    NBTTagCompound ptag = posList.getCompoundTagAt(j);
+                    controller
+                        .trackSymbolPosition(sym, ptag.getInteger("x"), ptag.getInteger("y"), ptag.getInteger("z"));
+                }
+            }
         }
 
         // Restore color cache from loaded structure name

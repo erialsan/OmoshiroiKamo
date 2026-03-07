@@ -79,6 +79,40 @@
 }
 ```
 
+### ブロック (Block)
+構造体内の特定のシンボル位置にあるブロックを検知・操作します。本 mod では、**`replace`（操作前）** と **`block`（操作後）** という統一された命名規則を採用しています。
+
+- `symbol`: 構造体定義で使用されている記号（1文字）。
+- `replace`: (**条件/旧ブロック**) 操作対象のブロックID。
+- `block`: (**結果/新ブロック**) 最終的にその位置にあるべきブロックID。
+- `consume`: (**Inputのみ**) trueの場合、`block` を指定しなくても自動的に空気に置き換えます（消去）。
+- `optional`: trueの場合、対象ブロックが見つからなくてもレシピを開始できます（あれば実行する）。
+- `amount`: 操作する最大個数。
+- `nbt`: (**Outputのみ**) 設置するブロックのTileEntityに適用するNBTデータ。値に **Expression** を使用可能です。
+
+#### 7つの主要ユースケース
+
+| # | ケース | 入出力 | 設定例 | 挙動 |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | **存在確認** | `inputs` | `"block": "stone"` | 石があるか確認（消えなない） |
+| 2 | **必須消費** | `inputs` | `"block": "stone", "consume": true` | 石を消去（開始時） |
+| 3 | **任意消費** | `inputs` | `"consume": true, "optional": true` | あれば消去（開始時） |
+| 4 | **入力置換** | `inputs` | `"replace": "A", "block": "B"` | AをBに変換（開始時） |
+| 5 | **新規設置** | `outputs`| `"block": "gold"` | 空きに金を設置（終了時） |
+| 6 | **必須置換** | `outputs`| `"replace": "stone", "block": "gold"` | 石を金に置換（終了時） |
+| 7 | **任意置換** | `outputs`| `"replace": "stone", "block": "gold", "optional": true` | 石あれば金に置換（終了時） |
+
+#### 動的NBTの例
+```json
+"outputs": [{
+  "symbol": "D",
+  "block": "modid:battery",
+  "nbt": {
+    "energy": { "type": "nbt", "path": "machine_power" }
+  }
+}]
+```
+
 ## 3. 条件 (Conditions)
 条件は毎 tick、または処理の開始時にチェックされます。論理演算（CoRパターン）を使用して複雑な条件を構成可能です。
 

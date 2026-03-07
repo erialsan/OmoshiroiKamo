@@ -79,6 +79,40 @@ The resource type is determined by the presence of a specific key within the obj
 }
 ```
 
+### Blocks
+Detect/manipulate blocks at specific symbol positions within the structure. This mod uses a unified naming convention: **`replace` (Before)** and **`block` (After)**.
+
+- `symbol`: The character symbol used in the structure definition.
+- `replace`: (**Condition/Old block**) The block ID to target for manipulation.
+- `block`: (**Result/New block**) The block ID that should finally be at the position.
+- `consume`: (**Input only**) If true, automatically replaces the block with Air (clearing). No need to specify `block`.
+- `optional`: If true, the recipe can start even if the target block is not found (executes if present).
+- `amount`: The maximum number of blocks to target.
+- `nbt`: (**Output only**) NBT data to apply to the placed block's TileEntity. Supports **Expression** values.
+
+#### 7 Key Use Cases
+
+| # | Case | I/O | Example Config | Behavior |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | **Exist Check** | `inputs` | `"block": "stone"` | Checks for Stone (not consumed). |
+| 2 | **Mandatory Consume**| `inputs` | `"block": "stone", "consume": true` | Clears Stone (at start). |
+| 3 | **Optional Consume** | `inputs` | `"consume": true, "optional": true` | Clears if present (at start). |
+| 4 | **Input Replace** | `inputs` | `"replace": "A", "block": "B"` | Transforms A to B (at start). |
+| 5 | **Output Placement** | `outputs`| `"block": "gold"` | Places Gold in air (at end). |
+| 6 | **Output Replace** | `outputs`| `"replace": "stone", "block": "gold"` | Replaces Stone with Gold (at end). |
+| 7 | **Optional Replace** | `outputs`| `"replace": "stone", "block": "gold", "optional": true`| Replaces if Stone exists (at end). |
+
+#### Dynamic NBT Example
+```json
+"outputs": [{
+  "symbol": "D",
+  "block": "modid:battery",
+  "nbt": {
+    "energy": { "type": "nbt", "path": "machine_power" }
+  }
+}]
+```
+
 ## 3. Conditions
 Conditions are checked every tick or at the start of the process. Logical operators (CoR Pattern) can be used to construct complex conditions.
 

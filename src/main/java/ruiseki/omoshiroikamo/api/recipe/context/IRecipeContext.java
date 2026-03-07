@@ -6,6 +6,7 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import ruiseki.omoshiroikamo.api.condition.ConditionContext;
 import ruiseki.omoshiroikamo.api.structure.core.IStructureEntry;
 
 /**
@@ -42,4 +43,9 @@ public interface IRecipeContext {
      * @return List of block positions with that symbol, in world coordinates
      */
     List<ChunkCoordinates> getSymbolPositions(char symbol);
+
+    /**
+     * Get a condition context for expression evaluation.
+     */
+    ConditionContext getConditionContext();
 }

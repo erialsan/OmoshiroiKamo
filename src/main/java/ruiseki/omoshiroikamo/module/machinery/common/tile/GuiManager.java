@@ -30,6 +30,7 @@ import ruiseki.omoshiroikamo.api.modular.IPortType;
 import ruiseki.omoshiroikamo.api.recipe.core.IModularRecipe;
 import ruiseki.omoshiroikamo.api.recipe.error.ErrorReason;
 import ruiseki.omoshiroikamo.api.recipe.io.IRecipeOutput;
+import ruiseki.omoshiroikamo.api.recipe.visitor.RecipeExecutionVisitor;
 import ruiseki.omoshiroikamo.core.client.gui.widget.TileWidget;
 import ruiseki.omoshiroikamo.core.lib.LibMisc;
 import ruiseki.omoshiroikamo.module.machinery.client.gui.widget.RedstoneModeWidget;
@@ -313,7 +314,13 @@ public class GuiManager {
 
         if (currentRecipe != null) {
             StringBuilder blocked = new StringBuilder();
+            RecipeExecutionVisitor contextSetter = new RecipeExecutionVisitor(
+                RecipeExecutionVisitor.Mode.CHECK,
+                outputPorts,
+                agent);
+
             for (IRecipeOutput output : currentRecipe.getOutputs()) {
+                output.accept(contextSetter); // Provides context implicitly
                 if (!output.process(outputPorts, true)) {
                     if (blocked.length() > 0) blocked.append(", ");
                     blocked.append(

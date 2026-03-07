@@ -3,6 +3,8 @@ package ruiseki.omoshiroikamo.api.recipe.visitor;
 import java.util.List;
 
 import ruiseki.omoshiroikamo.api.modular.IModularPort;
+import ruiseki.omoshiroikamo.api.recipe.io.BlockInput;
+import ruiseki.omoshiroikamo.api.recipe.io.BlockOutput;
 import ruiseki.omoshiroikamo.api.recipe.io.EnergyInput;
 import ruiseki.omoshiroikamo.api.recipe.io.EnergyOutput;
 import ruiseki.omoshiroikamo.api.recipe.io.EssentiaOutput;
@@ -39,6 +41,10 @@ public class RecipeExecutionVisitor implements IRecipeVisitor {
         this.mode = mode;
         this.ports = ports;
         this.agent = agent;
+    }
+
+    public ProcessAgent getAgent() {
+        return agent;
     }
 
     public boolean isSatisfied() {
@@ -111,6 +117,20 @@ public class RecipeExecutionVisitor implements IRecipeVisitor {
         }
     }
 
+    @Override
+    public void visit(BlockInput input) {
+        switch (mode) {
+            case CHECK:
+                if (!input.process(ports, true)) satisfied = false;
+                break;
+            case CONSUME:
+                input.process(ports, false);
+                break;
+            default:
+                break;
+        }
+    }
+
     // --- Outputs ---
 
     @Override
@@ -162,6 +182,17 @@ public class RecipeExecutionVisitor implements IRecipeVisitor {
     @Override
     public void visit(VisOutput output) {
         if (mode == Mode.CACHE) {
+            agent.addCachedOutput(output.copy());
+        }
+    }
+
+    @Override
+    public void visit(BlockOutput output) {
+        if (mode == Mode.CACHE) {
+            // BlockOutput acts as a placement check during CACHE mode (checkOutputCapacity)
+            if (!output.checkCapacity(ports)) {
+                satisfied = false;
+            }
             agent.addCachedOutput(output.copy());
         }
     }
