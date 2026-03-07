@@ -59,6 +59,11 @@ public class FluidInput extends AbstractRecipeInput {
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         FluidJson fluidJson = new FluidJson();
         fluidJson.name = json.get("fluid")
             .getAsString();
@@ -70,6 +75,8 @@ public class FluidInput extends AbstractRecipeInput {
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
+
         if (required != null && required.getFluid() != null) {
             json.addProperty(
                 "fluid",

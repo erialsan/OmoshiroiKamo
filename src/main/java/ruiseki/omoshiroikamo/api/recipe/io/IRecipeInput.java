@@ -34,6 +34,12 @@ public interface IRecipeInput extends IJsonMaterial {
     long getRequiredAmount();
 
     /**
+     * Whether this input should be consumed.
+     * If false, it only checks for presence.
+     */
+    boolean isConsume();
+
+    /**
      * Accept a visitor to perform operations on this input.
      */
     void accept(IRecipeVisitor visitor);

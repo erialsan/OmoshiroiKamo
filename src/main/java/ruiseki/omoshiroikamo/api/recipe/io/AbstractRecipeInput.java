@@ -8,9 +8,12 @@ import ruiseki.omoshiroikamo.core.json.AbstractJsonMaterial;
 
 public abstract class AbstractRecipeInput extends AbstractJsonMaterial implements IRecipeInput {
 
+    protected boolean consume = true;
+
     @Override
     public boolean process(List<IModularPort> ports, boolean simulate) {
         long remaining = getRequiredAmount();
+        boolean actualSimulate = simulate || !consume;
 
         for (IModularPort port : ports) {
             if (port.getPortType() != getPortType()) continue;
@@ -24,12 +27,17 @@ public abstract class AbstractRecipeInput extends AbstractJsonMaterial implement
                             .getName());
             }
 
-            remaining -= consume(port, remaining, simulate);
+            remaining -= consume(port, remaining, actualSimulate);
 
             if (remaining <= 0) break;
         }
 
         return remaining <= 0;
+    }
+
+    @Override
+    public boolean isConsume() {
+        return consume;
     }
 
     public abstract long getRequiredAmount();

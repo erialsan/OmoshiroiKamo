@@ -64,6 +64,11 @@ public class EnergyInput extends AbstractRecipeInput {
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         this.amount = json.get("energy")
             .getAsInt();
         this.perTick = true;
@@ -78,6 +83,7 @@ public class EnergyInput extends AbstractRecipeInput {
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
         json.addProperty("energy", amount);
         json.addProperty("perTick", perTick);
     }

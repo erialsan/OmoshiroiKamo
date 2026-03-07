@@ -60,6 +60,11 @@ public class ManaInput extends AbstractRecipeInput {
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         this.amount = json.get("mana")
             .getAsInt();
         this.perTick = false;
@@ -74,6 +79,7 @@ public class ManaInput extends AbstractRecipeInput {
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
         json.addProperty("mana", amount);
         json.addProperty("perTick", perTick);
     }

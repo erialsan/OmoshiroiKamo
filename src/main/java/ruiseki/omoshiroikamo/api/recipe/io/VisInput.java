@@ -60,6 +60,11 @@ public class VisInput extends AbstractRecipeInput {
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         this.aspectTag = json.get("vis")
             .getAsString();
         this.amountCentiVis = json.get("amount")
@@ -68,6 +73,7 @@ public class VisInput extends AbstractRecipeInput {
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
         json.addProperty("vis", aspectTag);
         json.addProperty("amount", amountCentiVis);
     }

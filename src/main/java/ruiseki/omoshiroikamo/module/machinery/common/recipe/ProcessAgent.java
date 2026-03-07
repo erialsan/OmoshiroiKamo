@@ -127,22 +127,21 @@ public class ProcessAgent extends AbstractRecipeProcess {
         if (manaOutputPerTick > 0 && !new ManaOutput(manaOutputPerTick, true).process(outputPorts, true))
             return TickResult.OUTPUT_FULL;
 
-        // 2.5. Continuous block condition check
+        // 2.5. Continuous condition check for non-consuming inputs
         if (currentRecipe != null) {
             RecipeExecutionVisitor checker = new RecipeExecutionVisitor(
                 RecipeExecutionVisitor.Mode.CHECK,
                 inputPorts,
                 this);
             for (IRecipeInput input : currentRecipe.getInputs()) {
-                if (input instanceof BlockInput) {
-                    BlockInput bi = (BlockInput) input;
-                    // Skip check if the block was consumed or replaced at start
-                    if (bi.isConsume() || bi.getReplace() != null) continue;
+                // Skip check if the input is meant to be consumed (already consumed at start)
+                // Also skip BlockInput if it involves a replacement (handled at start)
+                if (input.isConsume()) continue;
+                if (input instanceof BlockInput && ((BlockInput) input).getReplace() != null) continue;
 
-                    input.accept(checker);
-                    if (!checker.isSatisfied()) {
-                        return TickResult.BLOCK_MISSING;
-                    }
+                input.accept(checker);
+                if (!checker.isSatisfied()) {
+                    return input.getPortType() == IPortType.Type.BLOCK ? TickResult.BLOCK_MISSING : TickResult.NO_INPUT;
                 }
             }
         }

@@ -128,6 +128,11 @@ public class ItemInput extends AbstractRecipeInput {
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         if (json.has("ore")) {
             this.required = null;
             this.oreDict = json.get("ore")
@@ -162,6 +167,8 @@ public class ItemInput extends AbstractRecipeInput {
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
+
         if (oreDict != null) {
             json.addProperty("ore", oreDict);
             if (count != 1) json.addProperty("amount", count);

@@ -61,6 +61,11 @@ public class GasInput extends AbstractRecipeInput {
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         this.gasName = json.has("gas") ? json.get("gas")
             .getAsString() : null;
         this.amount = json.get("amount")
@@ -69,6 +74,7 @@ public class GasInput extends AbstractRecipeInput {
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
         if (gasName != null) json.addProperty("gas", gasName);
         json.addProperty("amount", amount);
     }
