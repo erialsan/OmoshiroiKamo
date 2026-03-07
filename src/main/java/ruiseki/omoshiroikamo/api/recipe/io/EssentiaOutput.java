@@ -36,11 +36,11 @@ public class EssentiaOutput extends AbstractRecipeOutput {
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
+    public void apply(List<IModularPort> ports, int multiplier) {
         Aspect aspect = Aspect.getAspect(aspectTag);
         if (aspect == null) return;
 
-        int remaining = amount;
+        int remaining = amount * multiplier;
 
         for (IModularPort port : ports) {
             if (port.getPortType() != IPortType.Type.ESSENTIA) continue;
@@ -102,7 +102,12 @@ public class EssentiaOutput extends AbstractRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new EssentiaOutput(aspectTag, amount);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        return new EssentiaOutput(aspectTag, amount * multiplier);
     }
 
     @Override

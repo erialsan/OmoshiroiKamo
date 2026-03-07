@@ -48,9 +48,9 @@ public class ItemOutput extends AbstractRecipeOutput {
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
+    public void apply(List<IModularPort> ports, int multiplier) {
         if (output == null) return;
-        int remaining = output.stackSize;
+        int remaining = output.stackSize * multiplier;
         for (IModularPort port : ports) {
             if (port.getPortType() != IPortType.Type.ITEM) continue;
             if (port.getPortDirection() != IPortType.Direction.OUTPUT
@@ -169,7 +169,15 @@ public class ItemOutput extends AbstractRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new ItemOutput(output != null ? output.copy() : null);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        if (output == null) return new ItemOutput((ItemStack) null);
+        ItemStack copy = output.copy();
+        copy.stackSize *= multiplier;
+        return new ItemOutput(copy);
     }
 
     @Override

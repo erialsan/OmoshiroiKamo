@@ -36,7 +36,7 @@ public class ManaInput extends AbstractRecipeInput {
 
     @Override
     public long getRequiredAmount() {
-        return amount;
+        return (long) amount;
     }
 
     @Override
@@ -49,11 +49,11 @@ public class ManaInput extends AbstractRecipeInput {
         AbstractManaPortTE manaPort = (AbstractManaPortTE) port;
         int stored = manaPort.getCurrentMana();
         if (stored > 0) {
-            int extract = (int) Math.min(stored, remaining);
+            int extract = (int) Math.min((long) stored, remaining);
             if (!simulate) {
                 manaPort.extractMana(extract);
             }
-            return extract;
+            return (long) extract;
         }
         return 0;
     }

@@ -58,7 +58,7 @@ public class BlockOutput extends AbstractJsonMaterial implements IRecipeOutput {
     }
 
     @Override
-    public boolean checkCapacity(List<IModularPort> ports) {
+    public boolean checkCapacity(List<IModularPort> ports, int multiplier) {
         if (optional) return true;
 
         IRecipeContext context = findRecipeContext(ports);
@@ -69,6 +69,7 @@ public class BlockOutput extends AbstractJsonMaterial implements IRecipeOutput {
 
         World world = context.getWorld();
         int available = 0;
+        int totalRequired = amount * multiplier;
 
         // Condition check
         for (ChunkCoordinates pos : positions) {
@@ -89,40 +90,41 @@ public class BlockOutput extends AbstractJsonMaterial implements IRecipeOutput {
             }
 
             if (match) available++;
-            if (available >= amount) return true;
+            if (available >= totalRequired) return true;
         }
 
         return false;
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
+    public void apply(List<IModularPort> ports, int multiplier) {
         // Find IRecipeContext from ports
         IRecipeContext context = findRecipeContext(ports);
         if (context == null) {
             return;
         }
 
-        apply(context);
+        apply(context, multiplier);
     }
 
     /**
      * Apply block changes to the structure.
      *
-     * @param context Recipe context with structure information
+     * @param context    Recipe context with structure information
+     * @param multiplier The batch size multiplier
      */
-    public void apply(IRecipeContext context) {
+    public void apply(IRecipeContext context, int multiplier) {
         World world = context.getWorld();
         List<ChunkCoordinates> positions = context.getSymbolPositions(symbol);
         if (positions == null) return;
 
-        int amount = getAmount();
+        int totalRequired = amount * multiplier;
         String block = getBlock();
         String replace = getReplace();
         NBTTagCompound nbtResult = getNbt(context);
 
         List<ChunkCoordinates> changedPositions = new ArrayList<>();
-        int remaining = amount;
+        int remaining = totalRequired;
         for (ChunkCoordinates pos : positions) {
             if (remaining <= 0) break;
 
@@ -165,7 +167,12 @@ public class BlockOutput extends AbstractJsonMaterial implements IRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new BlockOutput(symbol, block, replace, amount, optional, dynamicNbt);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        return new BlockOutput(symbol, block, replace, amount * multiplier, optional, dynamicNbt);
     }
 
     @Override

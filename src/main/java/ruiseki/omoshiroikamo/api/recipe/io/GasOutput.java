@@ -40,11 +40,11 @@ public class GasOutput extends AbstractRecipeOutput {
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
+    public void apply(List<IModularPort> ports, int multiplier) {
         Gas gas = GasRegistry.getGas(gasName);
         if (gas == null) return;
 
-        int remaining = amount;
+        int remaining = amount * multiplier;
 
         for (IModularPort port : ports) {
             if (port.getPortType() != IPortType.Type.GAS) continue;
@@ -111,7 +111,12 @@ public class GasOutput extends AbstractRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new GasOutput(gasName, amount);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        return new GasOutput(gasName, amount * multiplier);
     }
 
     @Override

@@ -11,8 +11,8 @@ public abstract class AbstractRecipeInput extends AbstractJsonMaterial implement
     protected boolean consume = true;
 
     @Override
-    public boolean process(List<IModularPort> ports, boolean simulate) {
-        long remaining = getRequiredAmount();
+    public boolean process(List<IModularPort> ports, int multiplier, boolean simulate) {
+        long remaining = getRequiredAmount() * multiplier;
         boolean actualSimulate = simulate || !consume;
 
         for (IModularPort port : ports) {

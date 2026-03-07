@@ -9,7 +9,7 @@ import ruiseki.omoshiroikamo.core.json.AbstractJsonMaterial;
 public abstract class AbstractRecipeOutput extends AbstractJsonMaterial implements IRecipeOutput {
 
     @Override
-    public boolean checkCapacity(List<IModularPort> ports) {
+    public boolean checkCapacity(List<IModularPort> ports, int multiplier) {
         long totalCapacity = 0;
 
         for (IModularPort port : ports) {
@@ -22,7 +22,7 @@ public abstract class AbstractRecipeOutput extends AbstractJsonMaterial implemen
             }
         }
 
-        return totalCapacity >= getRequiredAmount();
+        return totalCapacity >= getRequiredAmount() * multiplier;
     }
 
     /**

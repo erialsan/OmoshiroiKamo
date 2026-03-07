@@ -51,23 +51,24 @@ public class BlockInput extends AbstractJsonMaterial implements IRecipeInput {
     }
 
     @Override
-    public boolean process(List<IModularPort> ports, boolean simulate) {
+    public boolean process(List<IModularPort> ports, int multiplier, boolean simulate) {
         IRecipeContext context = findRecipeContext(ports);
         if (context == null) return false;
 
-        return check(context, simulate);
+        return check(context, multiplier, simulate);
     }
 
     /**
      * Check and optionally manipulate blocks at symbol positions.
      */
-    public boolean check(IRecipeContext context, boolean simulate) {
+    public boolean check(IRecipeContext context, int multiplier, boolean simulate) {
         if (optional && simulate) return true; // Always start if optional
 
         List<ChunkCoordinates> positions = context.getSymbolPositions(symbol);
         if (positions == null) return optional;
 
         World world = context.getWorld();
+        int totalRequired = amount * multiplier;
         int found = 0;
         int processed = 0;
 
@@ -76,7 +77,7 @@ public class BlockInput extends AbstractJsonMaterial implements IRecipeInput {
         String condition = (replace != null) ? replace : block;
 
         for (ChunkCoordinates pos : positions) {
-            if (processed >= amount) break;
+            if (processed >= totalRequired) break;
 
             Block currentBlock = world.getBlock(pos.posX, pos.posY, pos.posZ);
             int meta = world.getBlockMetadata(pos.posX, pos.posY, pos.posZ);
@@ -97,7 +98,7 @@ public class BlockInput extends AbstractJsonMaterial implements IRecipeInput {
             }
         }
 
-        return optional || (found >= amount);
+        return optional || (found >= totalRequired);
     }
 
     private void setBlockById(World world, ChunkCoordinates pos, String blockId) {

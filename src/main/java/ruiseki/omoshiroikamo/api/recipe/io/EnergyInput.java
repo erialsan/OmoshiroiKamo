@@ -40,7 +40,7 @@ public class EnergyInput extends AbstractRecipeInput {
 
     @Override
     public long getRequiredAmount() {
-        return amount;
+        return (long) amount;
     }
 
     @Override
@@ -53,11 +53,11 @@ public class EnergyInput extends AbstractRecipeInput {
         AbstractEnergyIOPortTE energyPort = (AbstractEnergyIOPortTE) port;
         int stored = energyPort.getEnergyStored();
         if (stored > 0) {
-            int extract = (int) Math.min(stored, remaining);
+            int extract = (int) Math.min((long) stored, remaining);
             if (!simulate) {
                 energyPort.extractEnergy(extract);
             }
-            return extract;
+            return (long) extract;
         }
         return 0;
     }

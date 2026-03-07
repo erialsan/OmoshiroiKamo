@@ -47,8 +47,8 @@ public class FluidOutput extends AbstractRecipeOutput {
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
-        FluidStack output = FluidRegistry.getFluidStack(fluidName, amount);
+    public void apply(List<IModularPort> ports, int multiplier) {
+        FluidStack output = FluidRegistry.getFluidStack(fluidName, amount * multiplier);
         if (output == null) return;
 
         int remaining = output.amount;
@@ -141,7 +141,12 @@ public class FluidOutput extends AbstractRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new FluidOutput(fluidName, amount);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        return new FluidOutput(fluidName, amount * multiplier);
     }
 
     @Override

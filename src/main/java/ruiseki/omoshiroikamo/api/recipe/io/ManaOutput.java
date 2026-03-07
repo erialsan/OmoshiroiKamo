@@ -39,8 +39,8 @@ public class ManaOutput extends AbstractRecipeOutput {
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
-        int remaining = amount;
+    public void apply(List<IModularPort> ports, int multiplier) {
+        long remaining = amount * multiplier;
 
         for (IModularPort port : ports) {
             if (port.getPortType() != IPortType.Type.MANA) continue;
@@ -51,7 +51,7 @@ public class ManaOutput extends AbstractRecipeOutput {
             int space = manaPort.getAvailableSpaceForMana();
 
             if (space > 0) {
-                int toAdd = Math.min(remaining, space);
+                int toAdd = (int) Math.min(remaining, (long) space);
                 manaPort.recieveMana(toAdd);
                 remaining -= toAdd;
             }
@@ -67,12 +67,12 @@ public class ManaOutput extends AbstractRecipeOutput {
     @Override
     protected long getPortCapacity(IModularPort port) {
         AbstractManaPortTE manaPort = (AbstractManaPortTE) port;
-        return (long) manaPort.getCurrentMana() + manaPort.getAvailableSpaceForMana();
+        return (long) manaPort.getCurrentMana() + (long) manaPort.getAvailableSpaceForMana();
     }
 
     @Override
     public long getRequiredAmount() {
-        return amount;
+        return (long) amount;
     }
 
     @Override
@@ -108,7 +108,12 @@ public class ManaOutput extends AbstractRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new ManaOutput(amount, perTick);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        return new ManaOutput(amount * multiplier, perTick);
     }
 
     @Override
