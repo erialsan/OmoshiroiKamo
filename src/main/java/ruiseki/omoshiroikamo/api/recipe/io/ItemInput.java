@@ -138,34 +138,25 @@ public class ItemInput extends AbstractRecipeInput {
         }
 
         ItemJson itemJson = new ItemJson();
-        if (json.has("item")) {
-            String itemId = json.get("item")
-                .getAsString();
-            if (itemId.startsWith("ore:")) {
-                this.required = null;
-                this.oreDict = itemId.substring(4);
-                this.count = json.has("amount") ? json.get("amount")
-                    .getAsInt() : 1;
-                return;
-            } else {
-                itemJson.name = itemId;
-            }
+        itemJson.read(json);
+
+        if (itemJson.name != null && itemJson.name.startsWith("ore:")) {
+            this.required = null;
+            this.oreDict = itemJson.name.substring(4);
+            this.count = itemJson.amount;
+        } else if (itemJson.ore != null) {
+            this.required = null;
+            this.oreDict = itemJson.ore;
+            this.count = itemJson.amount;
         } else {
-            Logger.warn("ItemInput requires 'item' or 'ore' key: {}", json);
-            return;
-        }
-
-        itemJson.amount = json.has("amount") ? json.get("amount")
-            .getAsInt() : 1;
-        this.count = itemJson.amount;
-        itemJson.meta = json.has("meta") ? json.get("meta")
-            .getAsInt() : 0;
-
-        ItemStack stack = ItemJson.resolveItemStack(itemJson);
-        if (stack != null) {
-            this.required = stack;
-            this.oreDict = null;
-            this.count = stack.stackSize;
+            ItemStack stack = ItemJson.resolveItemStack(itemJson);
+            if (stack != null) {
+                this.required = stack;
+                this.oreDict = null;
+                this.count = stack.stackSize;
+            } else {
+                Logger.warn("ItemInput failed to resolve item: {}", json);
+            }
         }
     }
 
