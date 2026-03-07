@@ -166,11 +166,6 @@ public class ProcessAgent extends AbstractRecipeProcess {
     public TickResult diagnoseIdle(List<IModularPort> inputPorts) {
         if (running || waitingForOutput) return TickResult.CONTINUE; // Not idle
 
-        // Check input ports to see if any input is missing
-        if (inputPorts == null || inputPorts.isEmpty()) {
-            return TickResult.NO_INPUT;
-        }
-
         return TickResult.IDLE;
     }
 

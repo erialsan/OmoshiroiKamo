@@ -45,7 +45,6 @@ import ruiseki.omoshiroikamo.api.recipe.visitor.IRecipeVisitor;
 import ruiseki.omoshiroikamo.api.structure.core.IStructureEntry;
 import ruiseki.omoshiroikamo.core.client.gui.handler.ItemStackHandlerBase;
 import ruiseki.omoshiroikamo.core.common.structure.StructureManager;
-import ruiseki.omoshiroikamo.core.common.util.Logger;
 import ruiseki.omoshiroikamo.core.lib.LibMisc;
 import ruiseki.omoshiroikamo.core.tileentity.AbstractMBModifierTE;
 import ruiseki.omoshiroikamo.module.machinery.common.block.BlockMachineController;
@@ -326,11 +325,7 @@ public class TEMachineController extends AbstractMBModifierTE
 
         // If running, tick and look-ahead search for next recipe
         if (processAgent.isRunning()) {
-            ConditionContext context = new ConditionContext(
-                worldObj,
-                xCoord,
-                yCoord,
-                zCoord);
+            ConditionContext context = new ConditionContext(worldObj, xCoord, yCoord, zCoord);
             ProcessAgent.TickResult result = processAgent
                 .tick(getContextualInputPorts(), getContextualOutputPorts(), context);
 

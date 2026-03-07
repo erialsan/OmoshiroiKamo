@@ -7,9 +7,9 @@ import java.util.Map;
 
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
-import net.minecraft.tileentity.TileEntity;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -112,22 +112,16 @@ public class BlockOutput extends AbstractJsonMaterial implements IRecipeOutput {
      * @param context Recipe context with structure information
      */
     public void apply(IRecipeContext context) {
+        World world = context.getWorld();
         List<ChunkCoordinates> positions = context.getSymbolPositions(symbol);
         if (positions == null) return;
-        World world = context.getWorld();
 
-        // Evaluate dynamic NBT once per apply (or per block if we want more variation)
-        NBTTagCompound nbtResult = null;
-        if (!dynamicNbt.isEmpty()) {
-            nbtResult = new NBTTagCompound();
-            ConditionContext condContext = context.getConditionContext();
-            for (Map.Entry<String, IExpression> entry : dynamicNbt.entrySet()) {
-                double val = entry.getValue()
-                    .evaluate(condContext);
-                nbtResult.setDouble(entry.getKey(), val);
-            }
-        }
+        int amount = getAmount();
+        String block = getBlock();
+        String replace = getReplace();
+        NBTTagCompound nbtResult = getNbt(context);
 
+        List<ChunkCoordinates> changedPositions = new ArrayList<>();
         int remaining = amount;
         for (ChunkCoordinates pos : positions) {
             if (remaining <= 0) break;
@@ -147,9 +141,18 @@ public class BlockOutput extends AbstractJsonMaterial implements IRecipeOutput {
             }
 
             if (match) {
-                setBlockAt(world, pos, block, nbtResult);
-                remaining--;
+                if (setBlockAt(world, pos, block, nbtResult)) {
+                    changedPositions.add(new ChunkCoordinates(pos.posX, pos.posY, pos.posZ));
+                    remaining--;
+                }
             }
+        }
+
+        // Defer neighbor notifications until all blocks are placed to prevent recursion
+        // loops
+        for (ChunkCoordinates pos : changedPositions) {
+            Block b = world.getBlock(pos.posX, pos.posY, pos.posZ);
+            world.func_147453_f(pos.posX, pos.posY, pos.posZ, b);
         }
     }
 
@@ -248,42 +251,85 @@ public class BlockOutput extends AbstractJsonMaterial implements IRecipeOutput {
         return null;
     }
 
+    /**
+     * Evaluate dynamic NBT once per apply.
+     */
+    private NBTTagCompound getNbt(IRecipeContext context) {
+        if (dynamicNbt.isEmpty()) {
+            return null;
+        }
+        NBTTagCompound nbtResult = new NBTTagCompound();
+        ConditionContext condContext = context.getConditionContext();
+        for (Map.Entry<String, IExpression> entry : dynamicNbt.entrySet()) {
+            double val = entry.getValue()
+                .evaluate(condContext);
+            nbtResult.setDouble(entry.getKey(), val);
+        }
+        return nbtResult;
+    }
+
     @Override
     public void accept(IRecipeVisitor visitor) {
         visitor.visit(this);
     }
 
     /**
-     * Set block at the given position.
+     * Sets a block at the given position.
+     * 
+     * @return true if block was changed (or at least attempted)
      */
-    private void setBlockAt(World world, ChunkCoordinates pos, String blockId, NBTTagCompound nbt) {
+    private boolean setBlockAt(World world, ChunkCoordinates pos, String blockId, NBTTagCompound nbt) {
         if (blockId == null) {
             world.setBlockToAir(pos.posX, pos.posY, pos.posZ);
-        } else {
-            String[] parts = blockId.split(":");
-            if (parts.length >= 2) {
-                Block blockObj = GameRegistry.findBlock(parts[0], parts[1]);
-                if (blockObj != null) {
-                    int meta = parts.length >= 3 ? Integer.parseInt(parts[2]) : 0;
-                    world.setBlock(pos.posX, pos.posY, pos.posZ, blockObj, meta, 3);
+            return true;
+        }
 
-                    if (nbt != null) {
-                        TileEntity te = world.getTileEntity(pos.posX, pos.posY, pos.posZ);
-                        if (te != null) {
-                            NBTTagCompound currentNbt = new NBTTagCompound();
-                            te.writeToNBT(currentNbt);
-                            // Merge results
-                            for (Object keyObj : nbt.func_150296_c()) {
-                                String key = (String) keyObj;
-                                currentNbt.setTag(key, nbt.getTag(key));
-                            }
-                            te.readFromNBT(currentNbt);
-                            world.markBlockForUpdate(pos.posX, pos.posY, pos.posZ);
-                        }
-                    }
+        String[] parts = blockId.split(":");
+        if (parts.length < 2) return false;
+
+        Block blockObj = GameRegistry.findBlock(parts[0], parts[1]);
+        if (blockObj == null) return false;
+
+        int meta = parts.length >= 3 ? Integer.parseInt(parts[2]) : 0;
+
+        // Optimization: If no NBT and not a TileEntity, use simple flag 3
+        if (nbt == null && !blockObj.hasTileEntity(meta)) {
+            world.setBlock(pos.posX, pos.posY, pos.posZ, blockObj, meta, 3);
+            return true;
+        }
+
+        // Use flag 2 (Send to clients, no neighbor notify) to prevent recursive
+        // StackOverflow
+        // especially important for blocks like Beacons that trigger updates in
+        // invalidate()
+        world.setBlock(pos.posX, pos.posY, pos.posZ, blockObj, meta, 2);
+
+        if (nbt != null) {
+            // BE CAREFUL: accessing TE immediately can trigger recursion in some mods (like
+            // Et Futurum/Angelica)
+            TileEntity te = world.getTileEntity(pos.posX, pos.posY, pos.posZ);
+            if (te != null && world.getBlock(pos.posX, pos.posY, pos.posZ) == blockObj) {
+                NBTTagCompound baseNbt = new NBTTagCompound();
+                te.writeToNBT(baseNbt);
+
+                // Merge dynamic NBT into base
+                for (Object keyObj : nbt.func_150296_c()) {
+                    String key = (String) keyObj;
+                    baseNbt.setTag(key, nbt.getTag(key));
                 }
+
+                // Set coordinates to ensure TE stays at correct position
+                baseNbt.setInteger("x", pos.posX);
+                baseNbt.setInteger("y", pos.posY);
+                baseNbt.setInteger("z", pos.posZ);
+
+                te.readFromNBT(baseNbt);
             }
         }
+
+        // Always send update to client if we used flag 2
+        world.markBlockForUpdate(pos.posX, pos.posY, pos.posZ);
+        return true;
     }
 
     /**
@@ -313,7 +359,7 @@ public class BlockOutput extends AbstractJsonMaterial implements IRecipeOutput {
 
     private String getBlockId(Block block, int meta) {
         UniqueIdentifier id = GameRegistry.findUniqueIdentifierFor(block);
-        if (id == null) return "air";
+        if (id == null) return "minecraft:air:0";
         return id.modId + ":" + id.name + ":" + meta;
     }
 

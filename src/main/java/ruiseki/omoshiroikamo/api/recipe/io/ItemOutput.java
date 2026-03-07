@@ -93,7 +93,9 @@ public class ItemOutput extends AbstractRecipeOutput {
 
     @Override
     protected boolean isCorrectPort(IModularPort port) {
-        return port.getPortType() == IPortType.Type.ITEM && port instanceof AbstractItemIOPortTE;
+        return port.getPortType() == IPortType.Type.ITEM && port instanceof AbstractItemIOPortTE
+            && (port.getPortDirection() == IPortType.Direction.OUTPUT
+                || port.getPortDirection() == IPortType.Direction.BOTH);
     }
 
     @Override
