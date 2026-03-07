@@ -1238,6 +1238,7 @@ gui.port_type.MANA=マナ
 gui.port_type.GAS=気体
 gui.port_type.ESSENTIA=エッセンシア
 gui.port_type.VIS=ビス
+gui.port_type.BLOCK=ブロック
 
 
 # Tiles
