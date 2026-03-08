@@ -519,6 +519,7 @@ entity.BlueSlimeChicken.name=ブルースライムのニワトリ
 item.liquidEgg.name=液体卵
 
 omoshiroikamo.condition.dimension=必要次元: %s
+omoshiroikamo.condition.biome.base=バイオーム条件:
 omoshiroikamo.condition.biome=必要バイオーム: %s
 omoshiroikamo.condition.block_below=下に必要なブロック: %s
 omoshiroikamo.condition.weather.clear=天候: 晴天

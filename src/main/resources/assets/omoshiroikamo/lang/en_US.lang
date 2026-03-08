@@ -517,6 +517,7 @@ entity.BlueSlimeChicken.name=Blue Slime Chicken
 
 # Waila
 omoshiroikamo.condition.dimension=Required Dimensions: %s
+omoshiroikamo.condition.biome.base=Biome condition:
 omoshiroikamo.condition.biome=Required Biomes: %s
 omoshiroikamo.condition.block_below=Required Block Below: %s
 omoshiroikamo.condition.weather.clear=Weather: Clear

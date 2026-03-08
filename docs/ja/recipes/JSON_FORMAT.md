@@ -158,8 +158,18 @@
 条件は毎 tick、または処理の開始時にチェックされます。論理演算（CoRパターン）を使用して複雑な条件を構成可能です。
 
 利用可能なタイプ:
-- `dimension`: 特定の次元にいるか。
-- `biome`: 特定のバイオームにいるか。
+- `dimension`: 特定の次元にいるか（`dim`: 数値）。
+- `biome`: バイオーム名、タグ、環境数値を判定します。
+    - `biomes`: バイオーム名の配列。
+    - `tags`: Forge BiomeDictionary タグの配列（`HOT`, `COLD`, `WET`, `DRY`, `FOREST` など）。
+    - `minTemp` / `maxTemp`: 気温の範囲判定（任意）。
+    - `minHumid` / `maxHumid`: 湿度の範囲判定（任意）。
+- `offset`: 任意の条件を指定した相対座標 `(dx, dy, dz)` で判定します。
+    - `dx`, `dy`, `dz`: 相対座標。
+    - `condition`: 実行する条件オブジェクト。
+- `pattern`: クラフトレシピのような形式で、周囲のバイオーム配置を判定します。
+    - `pattern`: 文字列の配列（例: `["AAA", "A#A", "AAA"]`）。
+    - `keys`: パターン文字と条件オブジェクトのマッピング。
 - `block_below`: マシンの下に特定のブロックがあるか。
 - `tile_nbt`: マシンのTileEntityのNBT値をチェック。
 - `weather`: 現在の天候を判定します。雨 (`rain`)、雷雨 (`thunder`)、晴天 (`clear`) を指定します。
@@ -168,7 +178,14 @@
 
 ```json
 "conditions": [
-  { "type": "dimension", "dim": -1 },
+  { 
+    "type": "pattern",
+    "pattern": [ "FFF", "F#F", "FFF" ],
+    "keys": {
+      "#": { "type": "biome", "biomes": ["Plains"] },
+      "F": { "type": "biome", "tags": ["FOREST"] }
+    }
+  },
   { "type": "weather", "weather": "rain" },
   { "type": "expression", "expression": "day % 28 == 0" }
 ]

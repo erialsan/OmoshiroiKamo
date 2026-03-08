@@ -24,6 +24,7 @@ import ruiseki.omoshiroikamo.api.recipe.expression.MapRangeExpression;
 import ruiseki.omoshiroikamo.api.recipe.io.IRecipeInput;
 import ruiseki.omoshiroikamo.api.recipe.io.IRecipeOutput;
 import ruiseki.omoshiroikamo.module.machinery.common.recipe.JSONLoader;
+import ruiseki.omoshiroikamo.module.machinery.common.recipe.MachineryJsonReader;
 
 /**
  * JSONLoader 統合テスト
@@ -84,7 +85,7 @@ public class JSONLoaderIntegrationTest {
             System.out.println("Loading recipes from: " + recipesDir.getAbsolutePath());
 
             // レシピを読み込み
-            loadedRecipes = JSONLoader.loadRecipes(recipesDir);
+            loadedRecipes = JSONLoader.loadRecipes(new MachineryJsonReader(recipesDir));
 
             if (loadedRecipes != null) {
                 System.out.println("Successfully loaded " + loadedRecipes.size() + " recipes.");

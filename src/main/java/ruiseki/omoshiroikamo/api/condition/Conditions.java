@@ -10,6 +10,8 @@ public class Conditions {
     public static void registerDefaults() {
         ConditionParserRegistry.register("dimension", DimensionCondition::fromJson);
         ConditionParserRegistry.register("biome", BiomeCondition::fromJson);
+        ConditionParserRegistry.register("offset", OffsetCondition::fromJson);
+        ConditionParserRegistry.register("pattern", BiomePatternCondition::fromJson);
         ConditionParserRegistry.register("block_below", BlockBelowCondition::fromJson);
         ConditionParserRegistry.register("weather", WeatherCondition::fromJson);
         ConditionParserRegistry.register("comparison", ComparisonCondition::fromJson);

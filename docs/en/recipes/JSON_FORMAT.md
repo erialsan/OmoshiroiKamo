@@ -158,8 +158,18 @@ Manipulate NBT data of any TileEntity within the structure. Unlike `block` repla
 Conditions are checked every tick or at the start of the process. Logical operators (CoR Pattern) can be used to construct complex conditions.
 
 Available types:
-- `dimension`: Is in a specific dimension.
-- `biome`: Is in a specific biome.
+- `dimension`: Is in a specific dimension (`dim`: number).
+- `biome`: Biome names, tags, or environmental values.
+    - `biomes`: Array of biome names.
+    - `tags`: Array of Forge BiomeDictionary tags (`HOT`, `COLD`, `WET`, `DRY`, `FOREST`, etc.).
+    - `minTemp` / `maxTemp`: Temperature range check (optional).
+    - `minHumid` / `maxHumid`: Humidity range check (optional).
+- `offset`: Wraps another condition to be checked at a relative offset `(dx, dy, dz)`.
+    - `dx`, `dy`, `dz`: Relative coordinates.
+    - `condition`: The condition object to execute.
+- `pattern`: Checks biome layout using a grid pattern (similar to crafting recipes).
+    - `pattern`: Array of strings (e.g., `["AAA", "A#A", "AAA"]`).
+    - `keys`: Mapping of pattern characters to condition objects.
 - `block_below`: Is there a specific block below the machine.
 - `tile_nbt`: Checks NBT values of the machine's TileEntity.
 - `weather`: Checks the current weather. Values: `rain`, `thunder`, `clear`.
@@ -168,7 +178,14 @@ Available types:
 
 ```json
 "conditions": [
-  { "type": "dimension", "dim": -1 },
+  { 
+    "type": "pattern",
+    "pattern": [ "FFF", "F#F", "FFF" ],
+    "keys": {
+      "#": { "type": "biome", "biomes": ["Plains"] },
+      "F": { "type": "biome", "tags": ["FOREST"] }
+    }
+  },
   { "type": "weather", "weather": "rain" },
   { "type": "expression", "expression": "day % 28 == 0" }
 ]
