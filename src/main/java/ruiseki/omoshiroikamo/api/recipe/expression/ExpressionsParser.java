@@ -15,6 +15,8 @@ public class ExpressionsParser {
         register("constant", json -> ConstantExpression.fromJson(json));
         register("nbt", json -> NbtExpression.fromJson(json));
         register("map_range", json -> MapRangeExpression.fromJson(json));
+        register("arithmetic", json -> ArithmeticExpression.fromJson(json));
+        register("world_property", json -> WorldPropertyExpression.fromJson(json));
     }
 
     public static void register(String type, Function<JsonObject, IExpression> parser) {
@@ -25,7 +27,13 @@ public class ExpressionsParser {
         if (element == null || element.isJsonNull()) return null;
 
         if (element.isJsonPrimitive()) {
-            return new ConstantExpression(element.getAsDouble());
+            if (element.getAsJsonPrimitive()
+                .isNumber()) {
+                return new ConstantExpression(element.getAsDouble());
+            } else if (element.getAsJsonPrimitive()
+                .isString()) {
+                    return ExpressionParser.parseExpression(element.getAsString());
+                }
         }
 
         if (element.isJsonObject()) {
