@@ -158,6 +158,7 @@ their original licenses:
 - RetroSophisticated Backpacks (textures/models) — original license applies.
 - Any GPLv3/LGPL-3.0 components used in this project remain under GPLv3/LGPL-3.0 and must be
 respected accordingly, all assets are forked before Sophisticated Backpack changes license to All Right Reserve.
+- Portions of the textures are from DeepMobLearningReloaded by ArtanMod (https://github.com/ArtanMod/DeepMobLearningReloaded), licensed under MIT.
 
 You are free to use, modify, and distribute the MIT-licensed portions of this
 project, but must comply with the original licenses of the included third-party
