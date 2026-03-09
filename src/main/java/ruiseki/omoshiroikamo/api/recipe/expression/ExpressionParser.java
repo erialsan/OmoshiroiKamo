@@ -89,6 +89,54 @@ public class ExpressionParser {
         return x;
     }
 
+    private IExpression asExpression(Object obj) {
+        if (obj instanceof IExpression) return (IExpression) obj;
+        if (obj instanceof ICondition) {
+            final ICondition cond = (ICondition) obj;
+            return new IExpression() {
+
+                @Override
+                public double evaluate(ConditionContext context) {
+                    return cond.isMet(context) ? 1 : 0;
+                }
+
+                @Override
+                public String toString() {
+                    return cond.toString();
+                }
+            };
+        }
+        throw error("Expected numeric expression or condition");
+    }
+
+    private ICondition asCondition(Object obj) {
+        if (obj instanceof ICondition) return (ICondition) obj;
+        if (obj instanceof IExpression) {
+            final IExpression expr = (IExpression) obj;
+            return new ICondition() {
+
+                @Override
+                public boolean isMet(ConditionContext context) {
+                    return expr.evaluate(context) != 0;
+                }
+
+                @Override
+                public String getDescription() {
+                    return expr.toString();
+                }
+
+                @Override
+                public void write(com.google.gson.JsonObject json) {}
+
+                @Override
+                public String toString() {
+                    return expr.toString();
+                }
+            };
+        }
+        throw error("Expected condition or numeric expression");
+    }
+
     // 3. Comparison: x == y, x != y, ...
     private Object parseComparison() {
         Object x = parseExpression();
@@ -116,86 +164,48 @@ public class ExpressionParser {
             }
 
             Object y = parseExpression();
-            if (!(x instanceof IExpression) || !(y instanceof IExpression)) {
-                throw error("Comparison requires numeric expressions as operands");
-            }
-            x = new ComparisonCondition((IExpression) x, (IExpression) y, op);
+            x = new ComparisonCondition(asExpression(x), asExpression(y), op);
         }
     }
 
     // expression = term ( ( "+" | "-" ) term )*
-    private IExpression parseExpression() {
-        IExpression x = parseTerm();
+    private Object parseExpression() {
+        Object x = parseTerm();
         for (;;) {
-            if (eat('+')) x = new ArithmeticExpression(x, parseTerm(), "+");
-            else if (eat('-')) x = new ArithmeticExpression(x, parseTerm(), "-");
+            if (eat('+')) x = new ArithmeticExpression(asExpression(x), asExpression(parseTerm()), "+");
+            else if (eat('-')) x = new ArithmeticExpression(asExpression(x), asExpression(parseTerm()), "-");
             else return x;
         }
     }
 
     // term = factor ( ( "*" | "/" | "%" ) factor )*
-    private IExpression parseTerm() {
-        IExpression x = parseFactor();
+    private Object parseTerm() {
+        Object x = parseFactor();
         for (;;) {
-            if (eat('*')) x = new ArithmeticExpression(x, parseFactor(), "*");
-            else if (eat('/')) x = new ArithmeticExpression(x, parseFactor(), "/");
-            else if (eat('%')) x = new ArithmeticExpression(x, parseFactor(), "%");
+            if (eat('*')) x = new ArithmeticExpression(asExpression(x), asExpression(parseFactor()), "*");
+            else if (eat('/')) x = new ArithmeticExpression(asExpression(x), asExpression(parseFactor()), "/");
+            else if (eat('%')) x = new ArithmeticExpression(asExpression(x), asExpression(parseFactor()), "%");
             else return x;
         }
     }
 
-    private IExpression parseFactor() {
+    private Object parseFactor() {
         if (eat('+')) return parseFactor(); // unary plus
-        if (eat('-')) return new ArithmeticExpression(new ConstantExpression(0), parseFactor(), "-"); // unary minus
+        if (eat('-')) return new ArithmeticExpression(new ConstantExpression(0), asExpression(parseFactor()), "-"); // unary
+                                                                                                                    // minus
         if (eat('!')) {
-            Object res = parseFactor();
-            if (res instanceof ICondition) {
-                final ICondition cond = (ICondition) res;
-                final ICondition notCond = new OpNot(cond);
-                return new IExpression() {
-
-                    @Override
-                    public double evaluate(ConditionContext context) {
-                        return notCond.isMet(context) ? 1 : 0;
-                    }
-
-                    @Override
-                    public String toString() {
-                        return "!" + cond.toString();
-                    }
-                };
-            }
-            throw error("Unary '!' requires a condition as operand");
+            return new OpNot(asCondition(parseFactor()));
         }
 
-        IExpression x;
         int startPos = this.pos;
         if (eat('(') || eat('{')) { // parentheses or braces
             char close = (input.charAt(pos - 1) == '(') ? ')' : '}';
             Object res = parseLogicalOr();
-            if (res instanceof IExpression) {
-                x = (IExpression) res;
-            } else if (res instanceof ICondition) {
-                final ICondition cond = (ICondition) res;
-                x = new IExpression() {
-
-                    @Override
-                    public double evaluate(ConditionContext context) {
-                        return cond.isMet(context) ? 1 : 0;
-                    }
-
-                    @Override
-                    public String toString() {
-                        return "(" + cond.toString() + ")";
-                    }
-                };
-            } else {
-                throw error("Empty grouping '()'");
-            }
             if (!eat(close)) throw error("Expected closing '" + close + "'");
+            return res;
         } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
             while ((ch >= '0' && ch <= '9') || ch == '.') nextChar();
-            x = new ConstantExpression(Double.parseDouble(input.substring(startPos, this.pos)));
+            return new ConstantExpression(Double.parseDouble(input.substring(startPos, this.pos)));
         } else if (ch >= 'a' && ch <= 'z') { // variables or functions
             while (ch >= 'a' && ch <= 'z' || ch == '_') nextChar();
             String name = input.substring(startPos, this.pos);
@@ -225,14 +235,14 @@ public class ExpressionParser {
                 if (name.equals("nbt") && !args.isEmpty()) {
                     if (args.size() >= 2) {
                         // nbt('S', 'key') or nbt(S, 'key')
-                        x = new NbtExpression(
+                        return new NbtExpression(
                             args.get(1),
                             0,
                             args.get(0)
                                 .charAt(0));
                     } else {
                         // nbt('key')
-                        x = new NbtExpression(args.get(0), 0);
+                        return new NbtExpression(args.get(0), 0);
                     }
                 } else {
                     throw error("Unknown function: '" + name + "' or missing arguments");
@@ -243,7 +253,7 @@ public class ExpressionParser {
                     || name.equals("time")
                     || name.equals("moon_phase")
                     || name.equals("moon")) {
-                    x = new WorldPropertyExpression(name.equals("moon") ? "moon_phase" : name);
+                    return new WorldPropertyExpression(name.equals("moon") ? "moon_phase" : name);
                 } else {
                     throw error("Unknown variable: '" + name + "'");
                 }
@@ -251,19 +261,57 @@ public class ExpressionParser {
         } else {
             throw error("Unexpected character: '" + (char) ch + "'");
         }
-
-        return x;
     }
 
     public static IExpression parseExpression(String input) {
         Object res = new ExpressionParser(input).parse();
         if (res instanceof IExpression) return (IExpression) res;
+        if (res instanceof ICondition) {
+            final ICondition cond = (ICondition) res;
+            return new IExpression() {
+
+                @Override
+                public double evaluate(ConditionContext context) {
+                    return cond.isMet(context) ? 1 : 0;
+                }
+
+                @Override
+                public String toString() {
+                    return cond.toString();
+                }
+            };
+        }
         throw new RuntimeException("Input is not a numeric expression: " + input);
     }
 
     public static ICondition parseCondition(String input) {
         Object res = new ExpressionParser(input).parse();
         if (res instanceof ICondition) return (ICondition) res;
+        if (res instanceof IExpression) {
+            final IExpression expr = (IExpression) res;
+            return new ICondition() {
+
+                @Override
+                public boolean isMet(ConditionContext context) {
+                    return expr.evaluate(context) != 0;
+                }
+
+                @Override
+                public String getDescription() {
+                    return expr.toString();
+                }
+
+                @Override
+                public void write(com.google.gson.JsonObject json) {
+                    // Not needed for dynamic conditions generated during parsing
+                }
+
+                @Override
+                public String toString() {
+                    return expr.toString();
+                }
+            };
+        }
         throw new RuntimeException("Input is not a condition: " + input);
     }
 }
