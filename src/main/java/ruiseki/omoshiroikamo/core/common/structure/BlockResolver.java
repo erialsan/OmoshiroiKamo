@@ -43,7 +43,12 @@ public class BlockResolver {
 
         // Special handling for "air"
         if ("air".equalsIgnoreCase(blockId)) {
-            return new ResolvedBlock(null, 0, true);
+            return new ResolvedBlock(null, 0, false, true, false);
+        }
+
+        // Special handling for "any" placeholder
+        if ("any".equalsIgnoreCase(blockId)) {
+            return new ResolvedBlock(null, 0, false, false, true);
         }
 
         String[] parts = blockId.split(":");
@@ -74,7 +79,7 @@ public class BlockResolver {
             return null;
         }
 
-        return new ResolvedBlock(block, meta, anyMeta);
+        return new ResolvedBlock(block, meta, anyMeta, false, false);
     }
 
     /**
@@ -87,6 +92,27 @@ public class BlockResolver {
         ResolvedBlock result = resolve(blockString);
         if (result == null || result.isAir) {
             return null;
+        }
+
+        if (result.isAny) {
+            IStructureElement<T> anyElement = new IStructureElement<T>() {
+
+                @Override
+                public boolean check(T t, World world, int x, int y, int z) {
+                    return true;
+                }
+
+                @Override
+                public boolean spawnHint(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return true;
+                }
+
+                @Override
+                public boolean placeBlock(T t, World world, int x, int y, int z, ItemStack trigger) {
+                    return true;
+                }
+            };
+            return withTracking(new HybridStructureElement<>(anyElement, anyElement));
         }
 
         if (result.anyMeta) {
@@ -352,12 +378,14 @@ public class BlockResolver {
         public final int meta;
         public final boolean anyMeta;
         public final boolean isAir;
+        public final boolean isAny;
 
-        public ResolvedBlock(Block block, int meta, boolean anyMeta) {
+        public ResolvedBlock(Block block, int meta, boolean anyMeta, boolean isAir, boolean isAny) {
             this.block = block;
             this.meta = meta;
             this.anyMeta = anyMeta;
-            this.isAir = (block == null);
+            this.isAir = isAir;
+            this.isAny = isAny;
         }
     }
 }

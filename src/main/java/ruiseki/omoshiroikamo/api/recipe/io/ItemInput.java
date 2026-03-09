@@ -128,6 +128,11 @@ public class ItemInput extends AbstractRecipeInput {
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         if (json.has("ore")) {
             this.required = null;
             this.oreDict = json.get("ore")
@@ -138,39 +143,36 @@ public class ItemInput extends AbstractRecipeInput {
         }
 
         ItemJson itemJson = new ItemJson();
-        if (json.has("item")) {
-            String itemId = json.get("item")
-                .getAsString();
-            if (itemId.startsWith("ore:")) {
-                this.required = null;
-                this.oreDict = itemId.substring(4);
-                this.count = json.has("amount") ? json.get("amount")
-                    .getAsInt() : 1;
-                return;
-            } else {
-                itemJson.name = itemId;
-            }
+        itemJson.read(json);
+
+        if (itemJson.name != null && itemJson.name.startsWith("ore:")) {
+            this.required = null;
+            this.oreDict = itemJson.name.substring(4);
+            this.count = itemJson.amount;
+        } else if (itemJson.ore != null) {
+            this.required = null;
+            this.oreDict = itemJson.ore;
+            this.count = itemJson.amount;
         } else {
-            Logger.warn("ItemInput requires 'item' or 'ore' key: {}", json);
-            return;
-        }
-
-        itemJson.amount = json.has("amount") ? json.get("amount")
-            .getAsInt() : 1;
-        this.count = itemJson.amount;
-        itemJson.meta = json.has("meta") ? json.get("meta")
-            .getAsInt() : 0;
-
-        ItemStack stack = ItemJson.resolveItemStack(itemJson);
-        if (stack != null) {
-            this.required = stack;
-            this.oreDict = null;
-            this.count = stack.stackSize;
+            // First set the count so it's preserved even if resolution fails
+            this.count = itemJson.amount > 0 ? itemJson.amount : 1;
+            ItemStack stack = ItemJson.resolveItemStack(itemJson);
+            if (stack != null) {
+                this.required = stack;
+                this.oreDict = null;
+                this.count = stack.stackSize;
+            } else {
+                this.required = null;
+                this.oreDict = null;
+                Logger.warn("ItemInput failed to resolve item: {}", json);
+            }
         }
     }
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
+
         if (oreDict != null) {
             json.addProperty("ore", oreDict);
             if (count != 1) json.addProperty("amount", count);

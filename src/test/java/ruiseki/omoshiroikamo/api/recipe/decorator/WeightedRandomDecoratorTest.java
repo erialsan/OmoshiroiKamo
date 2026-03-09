@@ -79,8 +79,18 @@ public class WeightedRandomDecoratorTest {
         }
 
         @Override
+        public void apply(List<IModularPort> ports, int multiplier) {
+            applyCount += multiplier;
+        }
+
+        @Override
+        public boolean checkCapacity(List<IModularPort> ports, int multiplier) {
+            return true;
+        }
+
+        @Override
         public void apply(List<IModularPort> ports) {
-            applyCount++;
+            apply(ports, 1);
         }
 
         @Override
@@ -88,6 +98,11 @@ public class WeightedRandomDecoratorTest {
 
         @Override
         public IRecipeOutput copy() {
+            return this;
+        }
+
+        @Override
+        public IRecipeOutput copy(int multiplier) {
             return this;
         }
 

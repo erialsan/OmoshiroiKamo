@@ -519,8 +519,13 @@ entity.BlueSlimeChicken.name=ブルースライムのニワトリ
 item.liquidEgg.name=液体卵
 
 omoshiroikamo.condition.dimension=必要次元: %s
+omoshiroikamo.condition.biome.base=バイオーム条件:
 omoshiroikamo.condition.biome=必要バイオーム: %s
 omoshiroikamo.condition.block_below=下に必要なブロック: %s
+omoshiroikamo.condition.weather.clear=天候: 晴天
+omoshiroikamo.condition.weather.rain=天候: 雨
+omoshiroikamo.condition.weather.thunder=天候: 雷雨
+omoshiroikamo.condition.expression=条件式: %s
 omoshiroikamo.condition.tile_nbt=マシンの状態 (%s %s %s)
 omoshiroikamo.condition.nand=NAND (以下のすべてが満たされない場合)
 omoshiroikamo.condition.nor=NOR (以下のすべてが満たされない場合)
@@ -1238,6 +1243,12 @@ gui.port_type.MANA=マナ
 gui.port_type.GAS=気体
 gui.port_type.ESSENTIA=エッセンシア
 gui.port_type.VIS=ビス
+gui.port_type.BLOCK=ブロック
+
+
+# NEI Dynamic Tier Display
+omoshiroikamo.nei.required_tiers=要求されるTier:
+omoshiroikamo.nei.tier_format=Tier %d
 
 
 # Tiles

@@ -47,8 +47,8 @@ public class FluidOutput extends AbstractRecipeOutput {
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
-        FluidStack output = FluidRegistry.getFluidStack(fluidName, amount);
+    public void apply(List<IModularPort> ports, int multiplier) {
+        FluidStack output = FluidRegistry.getFluidStack(fluidName, amount * multiplier);
         if (output == null) return;
 
         int remaining = output.amount;
@@ -91,12 +91,20 @@ public class FluidOutput extends AbstractRecipeOutput {
     protected long getPortCapacity(IModularPort port) {
         AbstractFluidPortTE fluidPort = (AbstractFluidPortTE) port;
         FluidTankInfo[] tankInfo = fluidPort.getTankInfo(ForgeDirection.UNKNOWN);
+        FluidStack stored = fluidPort.getStoredFluid();
+        FluidStack output = getOutput();
+
         if (tankInfo != null && tankInfo.length > 0) {
-            long total = 0;
+            long totalAvailable = 0;
+            // For simplicity, we assume one tank per port as per current implementation
             for (FluidTankInfo info : tankInfo) {
-                total += info.capacity;
+                if (stored == null || output == null || stored.isFluidEqual(output)) {
+                    int currentAmount = stored != null ? stored.amount : 0;
+                    int space = info.capacity - currentAmount;
+                    if (space > 0) totalAvailable += space;
+                }
             }
-            return total;
+            return totalAvailable;
         }
         return 0;
     }
@@ -133,7 +141,12 @@ public class FluidOutput extends AbstractRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new FluidOutput(fluidName, amount);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        return new FluidOutput(fluidName, amount * multiplier);
     }
 
     @Override

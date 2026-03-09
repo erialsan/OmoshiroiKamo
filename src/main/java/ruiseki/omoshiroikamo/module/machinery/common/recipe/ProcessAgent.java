@@ -11,53 +11,106 @@ import net.minecraftforge.common.util.Constants;
 import ruiseki.omoshiroikamo.api.condition.ConditionContext;
 import ruiseki.omoshiroikamo.api.modular.IModularPort;
 import ruiseki.omoshiroikamo.api.modular.IPortType;
+import ruiseki.omoshiroikamo.api.recipe.context.IRecipeContext;
 import ruiseki.omoshiroikamo.api.recipe.core.AbstractRecipeProcess;
 import ruiseki.omoshiroikamo.api.recipe.core.IModularRecipe;
+import ruiseki.omoshiroikamo.api.recipe.io.BlockInput;
 import ruiseki.omoshiroikamo.api.recipe.io.EnergyInput;
 import ruiseki.omoshiroikamo.api.recipe.io.EnergyOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.IRecipeInput;
 import ruiseki.omoshiroikamo.api.recipe.io.IRecipeOutput;
 import ruiseki.omoshiroikamo.api.recipe.io.ManaInput;
 import ruiseki.omoshiroikamo.api.recipe.io.ManaOutput;
 import ruiseki.omoshiroikamo.api.recipe.parser.OutputNBTRegistry;
 import ruiseki.omoshiroikamo.api.recipe.visitor.RecipeExecutionVisitor;
+import ruiseki.omoshiroikamo.api.structure.core.IStructureEntry;
 
 public class ProcessAgent extends AbstractRecipeProcess {
 
-    private List<IModularPort> currentInputPorts; // Temporary holder for visitor usage during start
+    private final IRecipeContext context;
+    private int currentBatchSize = 1;
 
-    public ProcessAgent() {
+    public ProcessAgent(IRecipeContext context) {
+        this.context = context;
         reset();
+    }
+
+    public IRecipeContext getContext() {
+        return context;
     }
 
     @Override
     protected void onStart(IModularRecipe recipe, List<IModularPort> inputPorts) {
-        this.currentInputPorts = inputPorts;
-
         // 1. Check inputs (This is still needed here or in start override)
     }
 
     // Re-implement start to return boolean and handle validation
-    public boolean startRecipe(IModularRecipe recipe, List<IModularPort> inputPorts) {
+    public boolean startRecipe(IModularRecipe recipe, List<IModularPort> inputPorts, List<IModularPort> outputPorts) {
         if (isRunning()) return false;
 
-        // 1. Check inputs
-        RecipeExecutionVisitor checker = new RecipeExecutionVisitor(
-            RecipeExecutionVisitor.Mode.CHECK,
-            inputPorts,
-            this);
-        recipe.accept(checker);
-        if (!checker.isSatisfied()) return false;
+        // Calculate maximum possible batch size
+        int batchMin = 1;
+        int batchMax = 1;
 
-        // Initialize state via base start logic (simplified here as we already validated)
+        if (context instanceof IStructureEntry) {
+            IStructureEntry structure = (IStructureEntry) context;
+            batchMin = Math.max(1, structure.getBatchMin());
+            batchMax = Math.max(batchMin, structure.getBatchMax());
+        }
+
+        int selectedBatch = -1;
+        for (int b = batchMax; b >= batchMin; b--) {
+            // Check inputs for this batch size
+            RecipeExecutionVisitor checker = new RecipeExecutionVisitor(
+                RecipeExecutionVisitor.Mode.CHECK,
+                inputPorts,
+                this);
+            checker.setBatchSize(b);
+            recipe.accept(checker);
+
+            if (checker.isSatisfied()) {
+                // Check if output ports have capacity for this batch size
+                RecipeExecutionVisitor outChecker = new RecipeExecutionVisitor(
+                    RecipeExecutionVisitor.Mode.CACHE,
+                    outputPorts,
+                    this);
+                outChecker.setBatchSize(b);
+                recipe.accept(outChecker);
+
+                if (outChecker.isSatisfied()) {
+                    selectedBatch = b;
+                    break;
+                }
+            }
+            // Clear current process state if check failed (energyPerTick etc might have
+            // been modified by visitors)
+            this.reset();
+        }
+
+        if (selectedBatch == -1) return false;
+
+        this.currentBatchSize = selectedBatch;
+
+        // Initialize state via base start logic
         super.start(recipe, inputPorts);
 
-        // 2. Consume and setup state (Specific to ProcessAgent)
-        recipe.accept(new RecipeExecutionVisitor(RecipeExecutionVisitor.Mode.CONSUME, inputPorts, this));
+        // Consume and setup state (Specific to ProcessAgent)
+        RecipeExecutionVisitor consumeVisitor = new RecipeExecutionVisitor(
+            RecipeExecutionVisitor.Mode.CONSUME,
+            inputPorts,
+            this);
+        consumeVisitor.setBatchSize(currentBatchSize);
+        recipe.accept(consumeVisitor);
 
         clearCaches();
 
-        // 3. Cache outputs
-        recipe.accept(new RecipeExecutionVisitor(RecipeExecutionVisitor.Mode.CACHE, null, this));
+        // Cache outputs
+        RecipeExecutionVisitor cacheVisitor = new RecipeExecutionVisitor(
+            RecipeExecutionVisitor.Mode.CACHE,
+            outputPorts,
+            this);
+        cacheVisitor.setBatchSize(currentBatchSize);
+        recipe.accept(cacheVisitor);
 
         return true;
     }
@@ -116,15 +169,35 @@ public class ProcessAgent extends AbstractRecipeProcess {
         if (manaOutputPerTick > 0 && !new ManaOutput(manaOutputPerTick, true).process(outputPorts, true))
             return TickResult.OUTPUT_FULL;
 
+        // 2.5. Continuous condition check for non-consuming inputs
+        if (currentRecipe != null) {
+            RecipeExecutionVisitor checker = new RecipeExecutionVisitor(
+                RecipeExecutionVisitor.Mode.CHECK,
+                inputPorts,
+                this);
+            checker.setBatchSize(currentBatchSize);
+            for (IRecipeInput input : currentRecipe.getInputs()) {
+                // Skip check if the input is meant to be consumed (already consumed at start)
+                // Also skip BlockInput if it involves a replacement (handled at start)
+                if (input.isConsume()) continue;
+                if (input instanceof BlockInput && ((BlockInput) input).getReplace() != null) continue;
+
+                input.accept(checker);
+                if (!checker.isSatisfied()) {
+                    return input.getPortType() == IPortType.Type.BLOCK ? TickResult.BLOCK_MISSING : TickResult.NO_INPUT;
+                }
+            }
+        }
+
         // 3. Execute base tick (handles conditions, progress, and actual consumption)
         super.executeTick(inputPorts, outputPorts, context);
 
-        // 4. Handle per-tick energy/mana outputs (since base doesn't know about them specifically)
+        // 4. Handle per-tick energy/mana outputs
         if (energyOutputPerTick > 0) new EnergyOutput(energyOutputPerTick, true).process(outputPorts, false);
         if (manaOutputPerTick > 0) new ManaOutput(manaOutputPerTick, true).process(outputPorts, false);
 
         if (isWaitingForOutput()) return TickResult.READY_OUTPUT;
-        if (!isRunning()) return TickResult.IDLE; // Could be aborted by condition
+        if (!isRunning()) return TickResult.IDLE;
 
         return TickResult.CONTINUE;
     }
@@ -135,11 +208,6 @@ public class ProcessAgent extends AbstractRecipeProcess {
     public TickResult diagnoseIdle(List<IModularPort> inputPorts) {
         if (running || waitingForOutput) return TickResult.CONTINUE; // Not idle
 
-        // Check input ports to see if any input is missing
-        if (inputPorts == null || inputPorts.isEmpty()) {
-            return TickResult.NO_INPUT;
-        }
-
         return TickResult.IDLE;
     }
 
@@ -147,14 +215,14 @@ public class ProcessAgent extends AbstractRecipeProcess {
     protected boolean produceOutputs(List<IModularPort> outputPorts) {
         // 1. Check capacity for all
         for (IRecipeOutput output : cachedOutputs) {
-            if (!output.process(outputPorts, true)) {
+            if (!output.checkCapacity(outputPorts, 1)) {
                 return false;
             }
         }
 
         // 2. Apply outputs
         for (IRecipeOutput output : cachedOutputs) {
-            output.process(outputPorts, false);
+            output.apply(outputPorts, 1);
         }
 
         return true;
@@ -163,6 +231,7 @@ public class ProcessAgent extends AbstractRecipeProcess {
     @Override
     protected void reset() {
         super.reset();
+        this.currentBatchSize = 1;
         clearCaches();
     }
 
@@ -226,8 +295,8 @@ public class ProcessAgent extends AbstractRecipeProcess {
 
     public String getStatusMessage(List<IModularPort> outputPorts) {
         if (isRunning() && !isWaitingForOutput()) {
-            if (maxProgress <= 0) return "Processing 0 %";
-            return "Processing " + (int) ((float) progress / maxProgress * 100) + " %";
+            if (maxProgress <= 0) return "Processing " + currentBatchSize + "x 0 %";
+            return "Processing " + currentBatchSize + "x " + (int) ((float) progress / maxProgress * 100) + " %";
         }
         if (isWaitingForOutput()) {
             String blocked = diagnoseBlockedOutputs(outputPorts);
@@ -240,7 +309,7 @@ public class ProcessAgent extends AbstractRecipeProcess {
         if (currentRecipe != null) {
             StringBuilder blocked = new StringBuilder();
             for (IRecipeOutput output : currentRecipe.getOutputs()) {
-                if (!output.process(outputPorts, true)) {
+                if (!output.checkCapacity(outputPorts, currentBatchSize)) {
                     if (blocked.length() > 0) blocked.append(", ");
                     blocked.append(
                         output.getPortType()
@@ -261,6 +330,17 @@ public class ProcessAgent extends AbstractRecipeProcess {
         return "Unknown";
     }
 
+    public boolean diagnoseBlockOutputFull(List<IModularPort> outputPorts) {
+        if (currentRecipe != null) {
+            for (IRecipeOutput output : currentRecipe.getOutputs()) {
+                if (output.getPortType() == IPortType.Type.BLOCK && !output.process(outputPorts, true)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public void writeToNBT(NBTTagCompound nbt) {
         nbt.setInteger("progress", progress);
         nbt.setInteger("maxProgress", maxProgress);
@@ -268,6 +348,7 @@ public class ProcessAgent extends AbstractRecipeProcess {
         nbt.setInteger("energyOutputPerTick", energyOutputPerTick);
         nbt.setInteger("manaPerTick", manaPerTick);
         nbt.setInteger("manaOutputPerTick", manaOutputPerTick);
+        nbt.setInteger("batchSize", currentBatchSize);
         nbt.setBoolean("running", running);
         nbt.setBoolean("waitingForOutput", waitingForOutput);
         if (currentRecipeName != null) nbt.setString("recipeName", currentRecipeName);
@@ -290,6 +371,7 @@ public class ProcessAgent extends AbstractRecipeProcess {
         energyOutputPerTick = nbt.getInteger("energyOutputPerTick");
         manaPerTick = nbt.getInteger("manaPerTick");
         manaOutputPerTick = nbt.getInteger("manaOutputPerTick");
+        currentBatchSize = nbt.hasKey("batchSize") ? nbt.getInteger("batchSize") : 1;
         running = nbt.getBoolean("running");
         waitingForOutput = nbt.getBoolean("waitingForOutput");
         currentRecipeName = nbt.hasKey("recipeName") ? nbt.getString("recipeName") : null;
@@ -330,6 +412,8 @@ public class ProcessAgent extends AbstractRecipeProcess {
         NO_MATCHING_RECIPE,
         OUTPUT_FULL,
         PAUSED,
-        NO_MANA
+        NO_MANA,
+        BLOCK_MISSING,
+        BLOCK_OUTPUT_FULL
     }
 }

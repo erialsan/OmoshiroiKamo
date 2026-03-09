@@ -8,7 +8,8 @@ import net.minecraft.world.World;
 
 import com.google.gson.JsonObject;
 
-import cpw.mods.fml.common.registry.GameData;
+import cpw.mods.fml.common.registry.GameRegistry;
+import cpw.mods.fml.common.registry.GameRegistry.UniqueIdentifier;
 import ruiseki.omoshiroikamo.api.modular.IModularPort;
 import ruiseki.omoshiroikamo.api.modular.IPortType;
 import ruiseki.omoshiroikamo.api.recipe.context.IRecipeContext;
@@ -22,17 +23,26 @@ import ruiseki.omoshiroikamo.core.json.AbstractJsonMaterial;
 public class BlockInput extends AbstractJsonMaterial implements IRecipeInput {
 
     private final char symbol;
-    private final String requiredBlock; // format: "modid:blockname:meta" or null for any block
-    private final int count; // minimum count required
+    private final String replace; // The block to find (Old / Condition)
+    private final String block; // The block to set (New / Result) or requirement
+    private final int amount;
+    private final boolean consume;
+    private final boolean optional;
 
-    public BlockInput(char symbol, String requiredBlock, int count) {
+    public BlockInput(char symbol, String block, String replace, int amount, boolean consume, boolean optional) {
         this.symbol = symbol;
-        this.requiredBlock = requiredBlock;
-        this.count = count;
+        this.block = block;
+        this.replace = replace;
+        this.amount = amount;
+        this.consume = consume;
+        this.optional = optional;
     }
 
-    public BlockInput(char symbol, int count) {
-        this(symbol, null, count);
+    /**
+     * Legacy constructor/shorthand
+     */
+    public BlockInput(char symbol, String block, int amount, boolean consume) {
+        this(symbol, block, null, amount, consume, false);
     }
 
     @Override
@@ -41,63 +51,87 @@ public class BlockInput extends AbstractJsonMaterial implements IRecipeInput {
     }
 
     @Override
-    public boolean process(List<IModularPort> ports, boolean simulate) {
-        // Find IRecipeContext from ports
+    public boolean process(List<IModularPort> ports, int multiplier, boolean simulate) {
         IRecipeContext context = findRecipeContext(ports);
-        if (context == null) {
-            return false;
-        }
+        if (context == null) return false;
 
-        return check(context);
+        return check(context, multiplier, simulate);
     }
 
     /**
-     * Check if the required blocks exist at the symbol positions.
-     *
-     * @param context Recipe context with structure information
-     * @return true if requirement is satisfied
+     * Check and optionally manipulate blocks at symbol positions.
      */
-    public boolean check(IRecipeContext context) {
+    public boolean check(IRecipeContext context, int multiplier, boolean simulate) {
+        if (optional && simulate) return true; // Always start if optional
+
         List<ChunkCoordinates> positions = context.getSymbolPositions(symbol);
+        if (positions == null) return optional;
+
         World world = context.getWorld();
+        int totalRequired = amount * multiplier;
+        int found = 0;
+        int processed = 0;
 
-        int matchCount = 0;
+        // Condition block: if replace is specified, we look for it. Otherwise we look
+        // for block.
+        String condition = (replace != null) ? replace : block;
+
         for (ChunkCoordinates pos : positions) {
-            Block block = world.getBlock(pos.posX, pos.posY, pos.posZ);
-            int meta = world.getBlockMetadata(pos.posX, pos.posY, pos.posZ);
-            String blockId = getBlockId(block, meta);
+            if (processed >= totalRequired) break;
 
-            if (requiredBlock == null || matchesBlockId(blockId, requiredBlock)) {
-                matchCount++;
+            Block currentBlock = world.getBlock(pos.posX, pos.posY, pos.posZ);
+            int meta = world.getBlockMetadata(pos.posX, pos.posY, pos.posZ);
+            String blockId = getBlockId(currentBlock, meta);
+
+            if (matchesBlockId(blockId, condition)) {
+                found++;
+                if (!simulate) {
+                    // Actual manipulation
+                    if (consume) {
+                        world.setBlockToAir(pos.posX, pos.posY, pos.posZ);
+                    } else if (replace != null && block != null) {
+                        // In-place replacement: A -> B
+                        setBlockById(world, pos, block);
+                    }
+                    processed++;
+                }
             }
         }
 
-        return matchCount >= count;
+        return optional || (found >= totalRequired);
+    }
+
+    private void setBlockById(World world, ChunkCoordinates pos, String blockId) {
+        String[] parts = blockId.split(":");
+        if (parts.length < 2) return;
+        Block b = GameRegistry.findBlock(parts[0], parts[1]);
+        if (b == null) return;
+        int meta = 0;
+        if (parts.length == 3 && !parts[2].equals("*")) {
+            try {
+                meta = Integer.parseInt(parts[2]);
+            } catch (NumberFormatException ignored) {}
+        }
+        world.setBlock(pos.posX, pos.posY, pos.posZ, b, meta, 3);
     }
 
     @Override
     public long getRequiredAmount() {
-        return count;
+        return amount;
     }
 
     @Override
-    public void accept(IRecipeVisitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public void read(JsonObject json) {
-        // BlockInput is immutable, read is handled by fromJson()
-    }
+    public void read(JsonObject json) {}
 
     @Override
     public void write(JsonObject json) {
         json.addProperty("type", "block");
         json.addProperty("symbol", String.valueOf(symbol));
-        if (requiredBlock != null) {
-            json.addProperty("block", requiredBlock);
-        }
-        json.addProperty("count", count);
+        if (block != null) json.addProperty("block", block);
+        if (replace != null) json.addProperty("replace", replace);
+        json.addProperty("amount", amount);
+        if (consume) json.addProperty("consume", true);
+        if (optional) json.addProperty("optional", true);
     }
 
     public JsonObject toJson() {
@@ -106,19 +140,22 @@ public class BlockInput extends AbstractJsonMaterial implements IRecipeInput {
         return json;
     }
 
-    /**
-     * Create BlockInput from JSON.
-     */
     public static BlockInput fromJson(JsonObject json) {
         char symbol = json.get("symbol")
             .getAsString()
             .charAt(0);
         String block = json.has("block") ? json.get("block")
             .getAsString() : null;
-        int count = json.has("count") ? json.get("count")
+        String replace = json.has("replace") ? json.get("replace")
+            .getAsString() : null;
+        int amount = json.has("amount") ? json.get("amount")
             .getAsInt() : 1;
+        boolean consume = json.has("consume") && json.get("consume")
+            .getAsBoolean();
+        boolean optional = json.has("optional") && json.get("optional")
+            .getAsBoolean();
 
-        return new BlockInput(symbol, block, count);
+        return new BlockInput(symbol, block, replace, amount, consume, optional);
     }
 
     /**
@@ -134,13 +171,20 @@ public class BlockInput extends AbstractJsonMaterial implements IRecipeInput {
         return null;
     }
 
+    @Override
+    public void accept(IRecipeVisitor visitor) {
+        visitor.visit(this);
+    }
+
     /**
      * Get block ID string in format "modid:blockname:meta"
      */
     private String getBlockId(Block block, int meta) {
-        String name = GameData.getBlockRegistry()
-            .getNameForObject(block);
-        return name + ":" + meta;
+        UniqueIdentifier ui = GameRegistry.findUniqueIdentifierFor(block);
+        if (ui == null) {
+            return "minecraft:air:0";
+        }
+        return ui.modId + ":" + ui.name + ":" + meta;
     }
 
     /**
@@ -178,15 +222,23 @@ public class BlockInput extends AbstractJsonMaterial implements IRecipeInput {
     }
 
     // Getters
-    public char getSymbol() {
-        return symbol;
+    public String getBlock() {
+        return block;
     }
 
-    public String getRequiredBlock() {
-        return requiredBlock;
+    public String getReplace() {
+        return replace;
     }
 
-    public int getCount() {
-        return count;
+    public boolean isConsume() {
+        return consume;
+    }
+
+    public boolean isOptional() {
+        return optional;
+    }
+
+    public int getAmount() {
+        return amount;
     }
 }

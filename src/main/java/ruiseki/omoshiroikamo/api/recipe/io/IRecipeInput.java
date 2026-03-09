@@ -21,17 +21,31 @@ public interface IRecipeInput extends IJsonMaterial {
     /**
      * Check if this input can be satisfied and optionally consume it.
      *
-     * @param ports    List of input ports to check/consume from
-     * @param simulate If true, only check without consuming. If false, actually
-     *                 consume.
+     * @param ports      List of input ports to check/consume from
+     * @param multiplier The batch size multiplier
+     * @param simulate   If true, only check without consuming. If false, actually
+     *                   consume.
      * @return true if the requirement is/was satisfied
      */
-    boolean process(List<IModularPort> ports, boolean simulate);
+    boolean process(List<IModularPort> ports, int multiplier, boolean simulate);
+
+    /**
+     * Legacy support for single batch processing.
+     */
+    default boolean process(List<IModularPort> ports, boolean simulate) {
+        return process(ports, 1, simulate);
+    }
 
     /**
      * Get the amount required for this input.
      */
     long getRequiredAmount();
+
+    /**
+     * Whether this input should be consumed.
+     * If false, it only checks for presence.
+     */
+    boolean isConsume();
 
     /**
      * Accept a visitor to perform operations on this input.

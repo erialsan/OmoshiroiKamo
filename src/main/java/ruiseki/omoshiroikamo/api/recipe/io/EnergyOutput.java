@@ -39,8 +39,8 @@ public class EnergyOutput extends AbstractRecipeOutput {
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
-        long remaining = amount;
+    public void apply(List<IModularPort> ports, int multiplier) {
+        long remaining = amount * multiplier;
 
         for (IModularPort port : ports) {
             if (port.getPortType() != IPortType.Type.ENERGY) continue;
@@ -50,7 +50,7 @@ public class EnergyOutput extends AbstractRecipeOutput {
             if (!(port instanceof AbstractEnergyIOPortTE)) continue;
 
             AbstractEnergyIOPortTE energyPort = (AbstractEnergyIOPortTE) port;
-            int accepted = energyPort.internalReceiveEnergy((int) remaining, false);
+            int accepted = energyPort.internalReceiveEnergy((int) Math.min(remaining, (long) Integer.MAX_VALUE), false);
             remaining -= accepted;
 
             if (remaining <= 0) break;
@@ -65,12 +65,12 @@ public class EnergyOutput extends AbstractRecipeOutput {
     @Override
     protected long getPortCapacity(IModularPort port) {
         AbstractEnergyIOPortTE energyPort = (AbstractEnergyIOPortTE) port;
-        return energyPort.getMaxEnergyStored() - energyPort.getEnergyStored();
+        return (long) (energyPort.getMaxEnergyStored() - energyPort.getEnergyStored());
     }
 
     @Override
     public long getRequiredAmount() {
-        return amount;
+        return (long) amount;
     }
 
     @Override
@@ -106,7 +106,12 @@ public class EnergyOutput extends AbstractRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new EnergyOutput(amount, perTick);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        return new EnergyOutput(amount * multiplier, perTick);
     }
 
     @Override

@@ -10,8 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
+
+import com.gtnewhorizon.structurelib.structure.AutoPlaceEnvironment;
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 import com.gtnewhorizon.structurelib.structure.IStructureElement;
+import com.gtnewhorizon.structurelib.structure.IStructureElementChain;
 import com.gtnewhorizon.structurelib.structure.StructureDefinition;
 
 import ruiseki.omoshiroikamo.api.structure.core.BlockMapping;
@@ -93,7 +98,7 @@ public class CustomStructureRegistry {
 
             if (!entry.getMappings()
                 .containsKey('F')) {
-                builder.addElement('F', ofBlock(MultiBlockBlocks.BASALT_STRUCTURE.getBlock(), 0));
+                builder.addElement('F', wrapTracking('F', ofBlock(MultiBlockBlocks.BASALT_STRUCTURE.getBlock(), 0)));
             }
 
             // Add dynamic mappings
@@ -104,7 +109,7 @@ public class CustomStructureRegistry {
 
                 IStructureElement<TEMachineController> element = createElementFromMapping(mapEntry.getValue());
                 if (element != null) {
-                    builder.addElement(symbol, element);
+                    builder.addElement(symbol, wrapTracking(symbol, element));
                 }
             }
 
@@ -127,6 +132,42 @@ public class CustomStructureRegistry {
 
     public static int[] getControllerOffset(String name) {
         return controllerOffsets.getOrDefault(name, new int[] { 0, 0, 0 });
+    }
+
+    private static IStructureElement<TEMachineController> wrapTracking(char symbol,
+        IStructureElement<TEMachineController> element) {
+        return new IStructureElementChain<TEMachineController>() {
+
+            @Override
+            public boolean check(TEMachineController t, World world, int x, int y, int z) {
+                if (element.check(t, world, x, y, z)) {
+                    t.trackSymbolPosition(symbol, x, y, z);
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            public boolean spawnHint(TEMachineController t, World world, int x, int y, int z, ItemStack trigger) {
+                return element.spawnHint(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public boolean placeBlock(TEMachineController t, World world, int x, int y, int z, ItemStack trigger) {
+                return element.placeBlock(t, world, x, y, z, trigger);
+            }
+
+            @Override
+            public BlocksToPlace getBlocksToPlace(TEMachineController t, World world, int x, int y, int z,
+                ItemStack trigger, AutoPlaceEnvironment env) {
+                return element.getBlocksToPlace(t, world, x, y, z, trigger, env);
+            }
+
+            @Override
+            public IStructureElement<TEMachineController>[] fallbacks() {
+                return new IStructureElement[] { element };
+            }
+        };
     }
 
     private static IStructureElement<TEMachineController> createElementFromMapping(ISymbolMapping mapping) {

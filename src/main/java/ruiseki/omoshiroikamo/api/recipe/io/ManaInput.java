@@ -36,7 +36,7 @@ public class ManaInput extends AbstractRecipeInput {
 
     @Override
     public long getRequiredAmount() {
-        return amount;
+        return (long) amount;
     }
 
     @Override
@@ -49,17 +49,22 @@ public class ManaInput extends AbstractRecipeInput {
         AbstractManaPortTE manaPort = (AbstractManaPortTE) port;
         int stored = manaPort.getCurrentMana();
         if (stored > 0) {
-            int extract = (int) Math.min(stored, remaining);
+            int extract = (int) Math.min((long) stored, remaining);
             if (!simulate) {
                 manaPort.extractMana(extract);
             }
-            return extract;
+            return (long) extract;
         }
         return 0;
     }
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         this.amount = json.get("mana")
             .getAsInt();
         this.perTick = false;
@@ -74,6 +79,7 @@ public class ManaInput extends AbstractRecipeInput {
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
         json.addProperty("mana", amount);
         json.addProperty("perTick", perTick);
     }

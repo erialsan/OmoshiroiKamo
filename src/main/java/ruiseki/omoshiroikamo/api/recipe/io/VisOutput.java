@@ -36,11 +36,11 @@ public class VisOutput extends AbstractRecipeOutput {
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
+    public void apply(List<IModularPort> ports, int multiplier) {
         Aspect aspect = Aspect.getAspect(aspectTag);
         if (aspect == null) return;
 
-        int remaining = amountCentiVis;
+        int remaining = amountCentiVis * multiplier;
 
         for (IModularPort port : ports) {
             if (port.getPortType() != IPortType.Type.VIS) continue;
@@ -106,7 +106,12 @@ public class VisOutput extends AbstractRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new VisOutput(aspectTag, amountCentiVis);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        return new VisOutput(aspectTag, amountCentiVis * multiplier);
     }
 
     @Override

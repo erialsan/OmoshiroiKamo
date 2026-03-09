@@ -48,9 +48,9 @@ public class ItemOutput extends AbstractRecipeOutput {
     }
 
     @Override
-    public void apply(List<IModularPort> ports) {
+    public void apply(List<IModularPort> ports, int multiplier) {
         if (output == null) return;
-        int remaining = output.stackSize;
+        int remaining = output.stackSize * multiplier;
         for (IModularPort port : ports) {
             if (port.getPortType() != IPortType.Type.ITEM) continue;
             if (port.getPortDirection() != IPortType.Direction.OUTPUT
@@ -93,7 +93,9 @@ public class ItemOutput extends AbstractRecipeOutput {
 
     @Override
     protected boolean isCorrectPort(IModularPort port) {
-        return port.getPortType() == IPortType.Type.ITEM && port instanceof AbstractItemIOPortTE;
+        return port.getPortType() == IPortType.Type.ITEM && port instanceof AbstractItemIOPortTE
+            && (port.getPortDirection() == IPortType.Direction.OUTPUT
+                || port.getPortDirection() == IPortType.Direction.BOTH);
     }
 
     @Override
@@ -101,8 +103,24 @@ public class ItemOutput extends AbstractRecipeOutput {
         if (output == null) return 0;
         AbstractItemIOPortTE itemPort = (AbstractItemIOPortTE) port;
         int maxStackSize = output.getMaxStackSize();
-        int limit = Math.min(itemPort.getInventoryStackLimit(), maxStackSize);
-        return (long) itemPort.getSizeInventory() * limit;
+        int invLimit = itemPort.getInventoryStackLimit();
+        int limit = Math.min(invLimit, maxStackSize);
+        int min = itemPort.getSlotDefinition()
+            .getMinItemOutput();
+        int max = itemPort.getSlotDefinition()
+            .getMaxItemOutput();
+
+        long available = 0;
+        for (int i = min; i < max; i++) {
+            ItemStack stack = itemPort.getStackInSlot(i);
+            if (stack == null) {
+                available += limit;
+            } else if (stacksMatch(stack, output)) {
+                int space = limit - stack.stackSize;
+                if (space > 0) available += space;
+            }
+        }
+        return available;
     }
 
     @Override
@@ -113,20 +131,8 @@ public class ItemOutput extends AbstractRecipeOutput {
     @Override
     public void read(JsonObject json) {
         ItemJson itemJson = new ItemJson();
-        if (json.has("item")) {
-            String itemId = json.get("item")
-                .getAsString();
-            if (itemId.startsWith("ore:")) {
-                itemJson.ore = itemId.substring(4);
-            } else {
-                itemJson.name = itemId;
-            }
-        }
-        itemJson.amount = json.has("amount") ? json.get("amount")
-            .getAsInt() : 1;
+        itemJson.read(json);
         this.count = itemJson.amount;
-        itemJson.meta = json.has("meta") ? json.get("meta")
-            .getAsInt() : 0;
         this.output = ItemJson.resolveItemStack(itemJson);
     }
 
@@ -163,7 +169,15 @@ public class ItemOutput extends AbstractRecipeOutput {
 
     @Override
     public IRecipeOutput copy() {
-        return new ItemOutput(output != null ? output.copy() : null);
+        return copy(1);
+    }
+
+    @Override
+    public IRecipeOutput copy(int multiplier) {
+        if (output == null) return new ItemOutput((ItemStack) null);
+        ItemStack copy = output.copy();
+        copy.stackSize *= multiplier;
+        return new ItemOutput(copy);
     }
 
     @Override

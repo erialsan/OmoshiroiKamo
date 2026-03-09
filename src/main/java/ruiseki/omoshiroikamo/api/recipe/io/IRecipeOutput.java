@@ -23,20 +23,41 @@ public interface IRecipeOutput extends IJsonMaterial {
     /**
      * Check if the ports have enough capacity to store this output.
      */
-    boolean checkCapacity(List<IModularPort> ports);
+    boolean checkCapacity(List<IModularPort> ports, int multiplier);
+
+    /**
+     * Legacy support for single batch capacity check.
+     */
+    default boolean checkCapacity(List<IModularPort> ports) {
+        return checkCapacity(ports, 1);
+    }
 
     /**
      * Produce the output and store it in the provided ports.
      */
-    void apply(List<IModularPort> ports);
+    void apply(List<IModularPort> ports, int multiplier);
+
+    /**
+     * Legacy support for single batch apply.
+     */
+    default void apply(List<IModularPort> ports) {
+        apply(ports, 1);
+    }
 
     /**
      * Check if this output is satisfied (legacy support for process if needed).
      * Now use checkCapacity and apply separately in ModularRecipe.
      */
     default boolean process(List<IModularPort> ports, boolean simulate) {
-        if (simulate) return checkCapacity(ports);
-        apply(ports);
+        return process(ports, 1, simulate);
+    }
+
+    /**
+     * Multi-batch support for process.
+     */
+    default boolean process(List<IModularPort> ports, int multiplier, boolean simulate) {
+        if (simulate) return checkCapacity(ports, multiplier);
+        apply(ports, multiplier);
         return true;
     }
 
@@ -44,6 +65,13 @@ public interface IRecipeOutput extends IJsonMaterial {
      * Create a deep copy of this output.
      */
     IRecipeOutput copy();
+
+    /**
+     * Create a deep copy of this output with a multi-batch quantity.
+     * 
+     * @param multiplier The batch size multiplier
+     */
+    IRecipeOutput copy(int multiplier);
 
     /**
      * Write this output state to NBT.

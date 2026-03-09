@@ -40,7 +40,7 @@ public class EnergyInput extends AbstractRecipeInput {
 
     @Override
     public long getRequiredAmount() {
-        return amount;
+        return (long) amount;
     }
 
     @Override
@@ -53,17 +53,22 @@ public class EnergyInput extends AbstractRecipeInput {
         AbstractEnergyIOPortTE energyPort = (AbstractEnergyIOPortTE) port;
         int stored = energyPort.getEnergyStored();
         if (stored > 0) {
-            int extract = (int) Math.min(stored, remaining);
+            int extract = (int) Math.min((long) stored, remaining);
             if (!simulate) {
                 energyPort.extractEnergy(extract);
             }
-            return extract;
+            return (long) extract;
         }
         return 0;
     }
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         this.amount = json.get("energy")
             .getAsInt();
         this.perTick = true;
@@ -78,6 +83,7 @@ public class EnergyInput extends AbstractRecipeInput {
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
         json.addProperty("energy", amount);
         json.addProperty("perTick", perTick);
     }

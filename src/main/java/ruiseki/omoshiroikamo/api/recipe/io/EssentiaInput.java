@@ -60,6 +60,11 @@ public class EssentiaInput extends AbstractRecipeInput {
 
     @Override
     public void read(JsonObject json) {
+        if (json.has("consume")) {
+            this.consume = json.get("consume")
+                .getAsBoolean();
+        }
+
         this.aspectTag = json.get("essentia")
             .getAsString();
         this.amount = json.get("amount")
@@ -68,6 +73,7 @@ public class EssentiaInput extends AbstractRecipeInput {
 
     @Override
     public void write(JsonObject json) {
+        if (!consume) json.addProperty("consume", false);
         json.addProperty("essentia", aspectTag);
         json.addProperty("amount", amount);
     }

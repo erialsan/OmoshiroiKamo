@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 
 import ruiseki.omoshiroikamo.core.common.util.Logger;
@@ -32,6 +33,10 @@ public abstract class AbstractJsonReader<T> {
     public AbstractJsonReader(File path) {
         this.path = path;
         this.gson = createGson();
+    }
+
+    public File getPath() {
+        return path;
     }
 
     protected Gson createGson() {
@@ -83,6 +88,9 @@ public abstract class AbstractJsonReader<T> {
             JsonReader reader = new JsonReader(fileReader);
             reader.setLenient(true);
             return new JsonParser().parse(reader);
+        } catch (JsonSyntaxException e) {
+            Logger.error("Malformed JSON file (perhaps empty or corrupted): " + file.getName(), e);
+            return null;
         }
     }
 

@@ -517,8 +517,13 @@ entity.BlueSlimeChicken.name=Blue Slime Chicken
 
 # Waila
 omoshiroikamo.condition.dimension=Required Dimensions: %s
+omoshiroikamo.condition.biome.base=Biome condition:
 omoshiroikamo.condition.biome=Required Biomes: %s
 omoshiroikamo.condition.block_below=Required Block Below: %s
+omoshiroikamo.condition.weather.clear=Weather: Clear
+omoshiroikamo.condition.weather.rain=Weather: Raining
+omoshiroikamo.condition.weather.thunder=Weather: Thundering
+omoshiroikamo.condition.expression=Condition: %s
 omoshiroikamo.condition.tile_nbt=Machine State (%s %s %s)
 omoshiroikamo.condition.nand=NAND (If not all are met)
 omoshiroikamo.condition.nor=NOR (If none are met)
@@ -1237,6 +1242,12 @@ gui.port_type.MANA=Mana
 gui.port_type.GAS=Gas
 gui.port_type.ESSENTIA=Essentia
 gui.port_type.VIS=Vis
+gui.port_type.BLOCK=Block
+
+
+# NEI Dynamic Tier Display
+omoshiroikamo.nei.required_tiers=Required Tiers:
+omoshiroikamo.nei.tier_format=Tier %d
 
 
 # Tiles
