@@ -15,15 +15,15 @@ import ruiseki.omoshiroikamo.core.json.AbstractJsonReader;
 /**
  * Reader for Modular Machinery recipes.
  */
-public class MachineryJsonReader extends AbstractJsonReader<List<MachineryMaterial>> {
+public class MachineryJsonReader extends AbstractJsonReader<List<JsonObject>> {
 
     public MachineryJsonReader(File path) {
         super(path);
     }
 
     @Override
-    public List<MachineryMaterial> read() throws IOException {
-        List<MachineryMaterial> materials = new ArrayList<>();
+    public List<JsonObject> read() throws IOException {
+        List<JsonObject> materials = new ArrayList<>();
         Logger.info("[MachineryJsonReader] Starting scan at: " + path.getAbsolutePath());
         if (path.isDirectory()) {
             List<File> files = listJsonFiles(path);
@@ -40,8 +40,8 @@ public class MachineryJsonReader extends AbstractJsonReader<List<MachineryMateri
     }
 
     @Override
-    protected List<MachineryMaterial> readFile(JsonElement root, File file) {
-        List<MachineryMaterial> list = new ArrayList<>();
+    protected List<JsonObject> readFile(JsonElement root, File file) {
+        List<JsonObject> list = new ArrayList<>();
         Logger.debug("[MachineryJsonReader] Reading file: " + file.getName());
 
         if (root.isJsonObject()) {
@@ -61,14 +61,16 @@ public class MachineryJsonReader extends AbstractJsonReader<List<MachineryMateri
                         + file.getName());
 
                 for (JsonElement element : recipesArr) {
-                    MachineryMaterial m = parseEntry(element, file);
+                    JsonObject m = parseEntry(element, file);
                     if (m != null) {
-                        if (m.machine == null) m.machine = group;
+                        if (!m.has("machine") && !m.has("group")) {
+                            m.addProperty("machine", group);
+                        }
                         list.add(m);
                     }
                 }
             } else {
-                MachineryMaterial m = parseEntry(obj, file);
+                JsonObject m = parseEntry(obj, file);
                 if (m != null) {
                     list.add(m);
                 }
@@ -80,7 +82,7 @@ public class MachineryJsonReader extends AbstractJsonReader<List<MachineryMateri
                     + " entries in "
                     + file.getName());
             for (JsonElement e : arr) {
-                MachineryMaterial m = parseEntry(e, file);
+                JsonObject m = parseEntry(e, file);
                 if (m != null) {
                     list.add(m);
                 }
@@ -94,11 +96,11 @@ public class MachineryJsonReader extends AbstractJsonReader<List<MachineryMateri
         return list;
     }
 
-    private MachineryMaterial parseEntry(JsonElement e, File source) {
+    private JsonObject parseEntry(JsonElement e, File source) {
         if (!e.isJsonObject()) return null;
-        MachineryMaterial m = new MachineryMaterial();
-        m.setSourceFile(source);
-        m.read(e.getAsJsonObject());
+        JsonObject m = e.getAsJsonObject();
+        // We can add metadata like source file if needed, but for now just returning
+        // the JSON
         return m;
     }
 }

@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gson.JsonObject;
+
 import ruiseki.omoshiroikamo.api.modular.IModularPort;
 import ruiseki.omoshiroikamo.api.recipe.core.IModularRecipe;
 import ruiseki.omoshiroikamo.core.common.util.Logger;
@@ -148,13 +150,16 @@ public class RecipeLoader {
         List<String> groups = new ArrayList<>();
         try {
             // Use existing cache if available, otherwise read
-            List<MachineryMaterial> materials = instance.reader.getData();
+            List<JsonObject> materials = instance.reader.getData();
             if (materials == null) {
                 materials = instance.reader.read();
             }
 
-            for (MachineryMaterial mat : materials) {
-                String group = mat.machine != null ? mat.machine : (mat.parent != null ? null : "default");
+            for (JsonObject mat : materials) {
+                String group = mat.has("machine") ? mat.get("machine")
+                    .getAsString()
+                    : (mat.has("group") ? mat.get("group")
+                        .getAsString() : (mat.has("parent") ? null : "default"));
                 if (group != null && !groups.contains(group)) {
                     groups.add(group);
                 }
