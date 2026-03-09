@@ -104,6 +104,8 @@ Assess and consume NBT data from blocks within the structure at recipe start.
 
 ### Blocks
 Detect/manipulate blocks at specific symbol positions within the structure. This mod uses a unified naming convention: **`replace` (Before)** and **`block` (After)**.
+(Note) Some TileEntities cause crashes when placed. (Confirmed with Beacon in Angelica + ETFuturm setup)
+If you find a bug, please create an issue.
 
 - `symbol`: The character symbol used in the structure definition.
 - `replace`: (**Condition/Old block**) The block ID to target for manipulation.

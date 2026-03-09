@@ -496,7 +496,7 @@ public class TEMachineController extends AbstractMBModifierTE
 
     @Override
     public EnumIO getSideIO(ForgeDirection side) {
-        return EnumIO.NONE;
+        return side == extendedFacing.getDirection() ? EnumIO.BOTH : EnumIO.NONE;
     }
 
     @Override

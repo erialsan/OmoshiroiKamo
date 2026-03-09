@@ -73,15 +73,8 @@ public class BlockNbtInput extends AbstractJsonMaterial implements IRecipeInput 
             NBTTagCompound nbt = new NBTTagCompound();
             te.writeToNBT(nbt);
 
-            // Check if key exists if not optional?
-            // Standard NBT returns 0 if missing.
-            // If user explicitly said "NBT not found", we should check hasKey.
             boolean hasKey = nbt.hasKey(key);
             if (!hasKey && !optional) {
-                // If it's a 'sub' operation, we definitely need the key or it fails.
-                // For 'set' or 'add', maybe it's okay?
-                // But user wanted "recipe execution canceled" if add/set fails.
-                // So if key is missing and NOT optional, we fail.
                 allSatisfied = false;
                 continue;
             }
