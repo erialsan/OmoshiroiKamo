@@ -3,6 +3,8 @@ package ruiseki.omoshiroikamo.api.recipe.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.JsonObject;
+
 import ruiseki.omoshiroikamo.api.condition.ComparisonCondition;
 import ruiseki.omoshiroikamo.api.condition.ConditionContext;
 import ruiseki.omoshiroikamo.api.condition.ICondition;
@@ -126,7 +128,7 @@ public class ExpressionParser {
                 }
 
                 @Override
-                public void write(com.google.gson.JsonObject json) {}
+                public void write(JsonObject json) {}
 
                 @Override
                 public String toString() {
@@ -302,7 +304,7 @@ public class ExpressionParser {
                 }
 
                 @Override
-                public void write(com.google.gson.JsonObject json) {
+                public void write(JsonObject json) {
                     // Not needed for dynamic conditions generated during parsing
                 }
 
