@@ -10,6 +10,7 @@ import ruiseki.omoshiroikamo.core.command.CommandMod;
 import ruiseki.omoshiroikamo.core.common.structure.StructureManager;
 import ruiseki.omoshiroikamo.core.init.ModBase;
 import ruiseki.omoshiroikamo.core.json.JsonErrorCollector;
+import ruiseki.omoshiroikamo.core.network.packet.PacketReloadNEI;
 import ruiseki.omoshiroikamo.module.machinery.MachineryModule;
 import ruiseki.omoshiroikamo.module.machinery.common.recipe.RecipeLoader;
 
@@ -44,8 +45,9 @@ public class CommandModularReload extends CommandMod {
                 .reload(MachineryModule.getConfigDir());
             sender.addChatMessage(new ChatComponentText(EnumChatFormatting.GREEN + "  Recipes reloaded"));
 
-            // Reload NEI (only triggers on Client Proxy)
-            OmoshiroiKamo.proxy.reloadNEI();
+            // Reload NEI (only triggers on Client Proxy via packet)
+            OmoshiroiKamo.instance.getPacketHandler()
+                .sendToAll(new PacketReloadNEI());
         } catch (Exception e) {
             sender
                 .addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "  Recipes failed: " + e.getMessage()));
