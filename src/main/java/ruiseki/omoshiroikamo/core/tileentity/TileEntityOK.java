@@ -233,6 +233,8 @@ public abstract class TileEntityOK extends TileEntity
         if (capabilities != null && tag.hasKey("OKCaps")) {
             capabilities.deserializeNBT(tag.getCompoundTag("OKCaps"));
         }
+
+        onLoad();
     }
 
     /**
