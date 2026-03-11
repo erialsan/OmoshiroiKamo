@@ -82,7 +82,7 @@ public abstract class TileEntityOK extends TileEntity
 
     /**
      * Set whether or not the blockState that has this tile entity can be rotated.
-     * 
+     *
      * @param rotatable If it can be rotated.
      */
     public void setRotatable(boolean rotatable) {
@@ -267,27 +267,6 @@ public abstract class TileEntityOK extends TileEntity
      */
     public boolean canInteractWith(EntityPlayer player) {
         return !isInvalid() && player.getDistanceSq(xCoord + 0.5D, yCoord + 0.5D, zCoord + 0.5D) <= 64D;
-    }
-
-    @Override
-    public void writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
-        writeGeneratedFieldsToNBT(tag);
-
-        if (capabilities != null) {
-            tag.setTag("OKCaps", capabilities.serializeNBT());
-        }
-    }
-
-    @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
-        readGeneratedFieldsFromNBT(tag);
-
-        if (capabilities != null && tag.hasKey("OKCaps")) {
-            capabilities.deserializeNBT(tag.getCompoundTag("OKCaps"));
-        }
-        onLoad();
     }
 
     /**
