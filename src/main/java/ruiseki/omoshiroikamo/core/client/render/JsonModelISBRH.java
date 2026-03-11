@@ -5,7 +5,6 @@ import static com.gtnewhorizon.gtnhlib.client.renderer.cel.model.quad.properties
 import java.util.Random;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.item.ItemStack;
@@ -13,6 +12,8 @@ import net.minecraftforge.client.IItemRenderer;
 
 import org.lwjgl.opengl.GL11;
 
+import com.gtnewhorizon.gtnhlib.blockstate.registry.BlockPropertyRegistry;
+import com.gtnewhorizon.gtnhlib.client.model.ItemContext;
 import com.gtnewhorizon.gtnhlib.client.model.ModelISBRH;
 import com.gtnewhorizon.gtnhlib.client.model.baked.BakedModel;
 import com.gtnewhorizon.gtnhlib.client.model.color.BlockColor;
@@ -21,44 +22,44 @@ import com.gtnewhorizon.gtnhlib.client.renderer.cel.model.quad.ModelQuadView;
 import com.gtnewhorizon.gtnhlib.client.renderer.cel.model.quad.properties.ModelQuadFacing;
 import com.gtnewhorizons.angelica.api.ThreadSafeISBRH;
 
+import ruiseki.omoshiroikamo.core.common.util.RenderUtils;
+
 @ThreadSafeISBRH(perThread = true)
 public class JsonModelISBRH extends ModelISBRH implements IItemRenderer {
 
     public static final JsonModelISBRH INSTANCE = new JsonModelISBRH();
 
+    private final ItemContext itemContext = new ItemContext();
     public final Random RAND = new Random();
 
     public JsonModelISBRH() {}
 
     public void renderToEntity(ItemStack stack) {
-
         Block block = Block.getBlockFromItem(stack.getItem());
         if (block == null) return;
-
         int meta = stack.getItemDamage();
-        BakedModel model = getModel(null, block, meta, 0, 0, 0);
 
         Tessellator tesselator = TessellatorManager.get();
+        itemContext.stack = stack;
+        itemContext.blockState = BlockPropertyRegistry.getBlockState(stack);
+        itemContext.random = RAND;
+
+        BakedModel model = getModel(itemContext);
+        RenderUtils.bindTexture(TextureMap.locationBlocksTexture);
 
         GL11.glPushMatrix();
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glDisable(GL11.GL_LIGHTING);
-
-        Minecraft.getMinecraft()
-            .getTextureManager()
-            .bindTexture(TextureMap.locationBlocksTexture);
-
         tesselator.startDrawingQuads();
 
         int color = model.getColor(null, 0, 0, 0, block, meta, RAND);
 
         for (ModelQuadFacing dir : DIRECTIONS) {
+            itemContext.quadFacing = dir;
 
-            final var quads = model.getQuads(null, 0, 0, 0, block, meta, dir, RAND, -1, null);
-            if (quads.isEmpty()) {
-                continue;
-            }
+            final var quads = model.getQuads(itemContext);
+            if (quads.isEmpty()) continue;
 
             for (ModelQuadView quad : quads) {
                 int quadColor = color;
@@ -83,5 +84,6 @@ public class JsonModelISBRH extends ModelISBRH implements IItemRenderer {
         GL11.glEnable(GL11.GL_LIGHTING);
         GL11.glDisable(GL11.GL_BLEND);
         GL11.glPopMatrix();
+        itemContext.reset();
     }
 }

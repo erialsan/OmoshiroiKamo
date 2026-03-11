@@ -28,9 +28,9 @@ Each backport module can be individually enabled or disabled in the config.
 
 ## Required Dependencies:
 
-- [StructureLib (GTNH)](https://github.com/GTNewHorizons/StructureLib)
-- [ModularUI2 (GTNH)](https://github.com/GTNewHorizons/ModularUI2)
-- [GTNHLib (GTNH)](https://github.com/GTNewHorizons/GTNHLib)
+- [StructureLib ](https://github.com/GTNewHorizons/StructureLib)
+- [ModularUI2 ](https://github.com/GTNewHorizons/ModularUI2)
+- [GTNHLib ( >= 0.9.39)](https://github.com/GTNewHorizons/GTNHLib)
 
 ## Features:
 
@@ -71,7 +71,7 @@ Comprehensive testing plans and strategies for maintainers and contributors.
 
 A backport and enhancement of the original Modular Machinery mod.
 
-- **Multiblock System**: 
+- **Multiblock System**:
     - Create custom machines via JSON configuration.
     - Rotation and flip structures
 - **IO Ports**:
@@ -81,7 +81,7 @@ A backport and enhancement of the original Modular Machinery mod.
     - Gas (Mekanism)
     - Mana (Botania)
     - Vis & Essentia (Thaumcraft, WIP ME Essentia IO)
-- **NEI Integration**: 
+- **NEI Integration**:
     - Support for viewing recipes and structure previews. (WIP enhanced view)
     - Structure preview
 - **Dynamic Reload**: Reload recipes and structures via `/ok modular reload`.

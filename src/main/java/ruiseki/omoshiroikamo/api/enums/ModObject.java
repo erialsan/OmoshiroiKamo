@@ -77,6 +77,11 @@ public enum ModObject {
 
     blockCable,
     blockProgrammer,
+    blockMenrilSapling,
+    blockMenrilLog,
+    blockMenrilLeaves,
+    blockMenrilDoor,
+    blockMenrilPlanks,
 
     itemBackPack,
     itemUpgrade,
@@ -113,8 +118,6 @@ public enum ModObject {
     itemChickenFood,
     itemCowSpawnEgg,
 
-    itemSyringe,
-
     itemCreativeModelLearner,
     itemDeepLearner,
     itemDataModel,
@@ -130,6 +133,7 @@ public enum ModObject {
     itemWrench,
 
     itemVariableCard,
+    itemMenrilBerries,
 
     itemEnergyInterface,
     itemEnergyFilterInterface,
@@ -170,13 +174,5 @@ public enum ModObject {
 
     public String getRegistryName() {
         return LibMisc.MOD_ID + ":" + unlocalisedName;
-    }
-
-    public void setBlock(Block block) {
-        this.blockInstance = block;
-    }
-
-    public Block getBlock() {
-        return this.blockInstance;
     }
 }
