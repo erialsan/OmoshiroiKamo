@@ -214,14 +214,14 @@ public class TEBackpack extends AbstractTE implements ISidedInventory, IGuiHolde
     }
 
     @Override
-    public void writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+    public void writeCommon(NBTTagCompound tag) {
+        super.writeCommon(tag);
         handler.writeToNBT(tag);
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+    public void readCommon(NBTTagCompound tag) {
+        super.readCommon(tag);
         handler.readFromNBT(tag);
     }
 }

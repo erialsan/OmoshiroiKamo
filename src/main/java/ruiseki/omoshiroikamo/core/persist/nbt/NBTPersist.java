@@ -5,6 +5,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import net.minecraft.nbt.NBTTagCompound;
 import ruiseki.omoshiroikamo.core.tileentity.TileEntityOK;
 
 /**
@@ -12,8 +13,8 @@ import ruiseki.omoshiroikamo.core.tileentity.TileEntityOK;
  * Fields that are a subtype of {@link INBTSerializable} must not be null, they should
  * have a dummy value that will then be populated with the actual values.
  * It will automatically be added to
- * {@link TileEntityOK#writeToNBT(net.minecraft.nbt.NBTTagCompound)}
- * and {@link TileEntityOK#readFromNBT(net.minecraft.nbt.NBTTagCompound)}.
+ * {@link TileEntityOK#writeCommon(NBTTagCompound)}
+ * and {@link TileEntityOK#readCommon(NBTTagCompound)}.
  *
  * @author rubensworks
  *

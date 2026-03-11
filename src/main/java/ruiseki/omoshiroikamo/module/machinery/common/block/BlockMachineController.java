@@ -128,7 +128,7 @@ public class BlockMachineController extends AbstractBlock<TEMachineController> i
         if (te == null) return;
 
         // Preserve TileEntity data but avoid block metadata-based facing.
-        te.readFromNBT(stack.stackTagCompound);
+        te.readCommon(stack.stackTagCompound);
         world.markBlockForUpdate(x, y, z);
 
         ForgeDirection direction;
