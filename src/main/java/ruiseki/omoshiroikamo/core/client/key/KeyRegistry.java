@@ -1,19 +1,19 @@
 package ruiseki.omoshiroikamo.core.client.key;
 
-import cpw.mods.fml.client.registry.ClientRegistry;
+import java.util.HashSet;
+import java.util.Set;
+
 import net.minecraft.client.settings.KeyBinding;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.InputEvent;
 import ruiseki.omoshiroikamo.core.init.ModBase;
 import ruiseki.omoshiroikamo.core.lib.LibMisc;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Enum that contains all custom hotkeys that
