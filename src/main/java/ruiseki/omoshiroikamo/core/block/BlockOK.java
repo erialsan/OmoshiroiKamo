@@ -3,7 +3,6 @@ package ruiseki.omoshiroikamo.core.block;
 import java.util.ArrayList;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.entity.EntityLivingBase;
@@ -26,6 +25,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import lombok.experimental.Delegate;
+import ruiseki.omoshiroikamo.core.block.orientable.IOrientableBlock;
 import ruiseki.omoshiroikamo.core.block.property.BlockPropertyProviderComponent;
 import ruiseki.omoshiroikamo.core.block.property.IBlockPropertyProvider;
 import ruiseki.omoshiroikamo.core.client.render.BaseBlockRender;
@@ -33,7 +33,6 @@ import ruiseki.omoshiroikamo.core.client.render.BlockRenderInfo;
 import ruiseki.omoshiroikamo.core.client.render.block.WorldRender;
 import ruiseki.omoshiroikamo.core.client.texture.FlippableIcon;
 import ruiseki.omoshiroikamo.core.client.texture.MissingIcon;
-import ruiseki.omoshiroikamo.core.common.util.Logger;
 import ruiseki.omoshiroikamo.core.helper.MinecraftHelpers;
 import ruiseki.omoshiroikamo.core.helper.TileHelpers;
 import ruiseki.omoshiroikamo.core.item.ItemBlockOK;
@@ -42,7 +41,7 @@ import ruiseki.omoshiroikamo.core.tileentity.IOrientable;
 import ruiseki.omoshiroikamo.core.tileentity.TileEntityNBTStorage;
 import ruiseki.omoshiroikamo.core.tileentity.TileEntityOK;
 
-public class BlockOK extends Block implements IBlockPropertyProvider {
+public class BlockOK extends Block implements IBlockPropertyProvider, IBlock {
 
     protected final Class<? extends TileEntityOK> teClass;
     protected final String name;
@@ -57,10 +56,10 @@ public class BlockOK extends Block implements IBlockPropertyProvider {
     protected boolean isFullSize = true;
     public boolean hasSubtypes = false;
 
-    private boolean rotatable;
+    protected boolean rotatable = false;
 
     protected BlockOK(String name) {
-        this(name, null, new Material(MapColor.ironColor));
+        this(name, null, Material.iron);
     }
 
     public BlockOK(String name, Material material) {
@@ -68,7 +67,7 @@ public class BlockOK extends Block implements IBlockPropertyProvider {
     }
 
     protected BlockOK(String name, Class<? extends TileEntityOK> teClass) {
-        this(name, teClass, new Material(MapColor.ironColor));
+        this(name, teClass, Material.iron);
     }
 
     protected BlockOK(String name, @Nullable Class<? extends TileEntityOK> teClass, Material mat) {
@@ -81,11 +80,22 @@ public class BlockOK extends Block implements IBlockPropertyProvider {
         this.setStepSound(getSoundForMaterial(mat));
     }
 
+    @Override
     public void init() {
         registerBlock();
         registerTileEntity();
         registerBlockColor();
         registerComponent();
+    }
+
+    @Override
+    public Block getBlock() {
+        return this;
+    }
+
+    @Override
+    public boolean isHasSubtypes() {
+        return this.hasSubtypes;
     }
 
     protected void registerBlock() {
@@ -131,10 +141,6 @@ public class BlockOK extends Block implements IBlockPropertyProvider {
         return new BaseBlockRender<>();
     }
 
-    public boolean hasSubtypes() {
-        return this.hasSubtypes;
-    }
-
     @SideOnly(Side.CLIENT)
     public void setRenderStateByMeta(final int itemDamage) {}
 
@@ -153,10 +159,14 @@ public class BlockOK extends Block implements IBlockPropertyProvider {
     public TileEntity createTileEntity(World world, int metadata) {
         if (teClass != null) {
             try {
-                return teClass.newInstance();
-            } catch (Exception e) {
-                Logger.error("Could not create tile entity for block " + name + " for class " + teClass);
+                TileEntityOK tile = teClass.newInstance();
+                tile.onLoad();
+                tile.setRotatable(isRotatable());
+                return tile;
+            } catch (InstantiationException | IllegalAccessException e) {
+                e.printStackTrace();
             }
+            return null;
         }
         return null;
     }
@@ -193,6 +203,14 @@ public class BlockOK extends Block implements IBlockPropertyProvider {
     @Override
     public final boolean isNormalCube(final IBlockAccess world, final int x, final int y, final int z) {
         return this.isFullSize;
+    }
+
+    public boolean isRotatable() {
+        return rotatable;
+    }
+
+    public void setRotatable(boolean rotatable) {
+        this.rotatable = rotatable;
     }
 
     public SoundType getSoundForMaterial(Material mat) {
@@ -386,7 +404,7 @@ public class BlockOK extends Block implements IBlockPropertyProvider {
     }
 
     /**
-     * If the NBT data of this blockState should be preserved in the item when it
+     * If the NBT data of this block should be preserved in the item when it
      * is broken into an item.
      *
      * @return If it should keep NBT data.

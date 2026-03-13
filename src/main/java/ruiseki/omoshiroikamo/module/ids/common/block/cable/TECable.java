@@ -37,7 +37,7 @@ import ruiseki.omoshiroikamo.api.ids.ICable;
 import ruiseki.omoshiroikamo.api.ids.ICableEndpoint;
 import ruiseki.omoshiroikamo.api.ids.ICableNode;
 import ruiseki.omoshiroikamo.api.ids.ICablePart;
-import ruiseki.omoshiroikamo.core.block.ICollidable;
+import ruiseki.omoshiroikamo.core.block.collidable.ICollidable;
 import ruiseki.omoshiroikamo.core.capabilities.Capability;
 import ruiseki.omoshiroikamo.core.capabilities.light.CapabilityLight;
 import ruiseki.omoshiroikamo.core.capabilities.redstone.CapabilityRedstone;

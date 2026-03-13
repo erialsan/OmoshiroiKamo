@@ -28,9 +28,9 @@ Each backport module can be individually enabled or disabled in the config.
 
 ## Required Dependencies:
 
-- [StructureLib (GTNH)](https://github.com/GTNewHorizons/StructureLib)
-- [ModularUI2 (GTNH)](https://github.com/GTNewHorizons/ModularUI2)
-- [GTNHLib (GTNH)](https://github.com/GTNewHorizons/GTNHLib)
+- [StructureLib ](https://github.com/GTNewHorizons/StructureLib)
+- [ModularUI2 ](https://github.com/GTNewHorizons/ModularUI2)
+- [GTNHLib ( >= 0.9.39)](https://github.com/GTNewHorizons/GTNHLib)
 
 ## Features:
 
@@ -81,6 +81,7 @@ A backport and enhancement of the original Modular Machinery mod.
     - Gas (Mekanism)
     - Mana (Botania)
     - Vis & Essentia (Thaumcraft, WIP ME Essentia IO)
+
 - **External Port Proxy System**:
     - Use external blocks (chests, tanks, energy storage) as machine ports
     - Supports 6 resource types with unified interface
