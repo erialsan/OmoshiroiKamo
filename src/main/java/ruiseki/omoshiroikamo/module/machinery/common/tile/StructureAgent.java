@@ -15,6 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChunkCoordinates;
+import net.minecraft.world.World;
 
 import com.gtnewhorizon.structurelib.structure.IStructureDefinition;
 
@@ -320,16 +321,26 @@ public class StructureAgent {
     }
 
     private void updateComponentTiers() {
-        componentTiers.clear();
-        if (customStructureName == null || customStructureName.isEmpty()) return;
+        if (customStructureName == null || customStructureName.isEmpty()) {
+            componentTiers.clear();
+            return;
+        }
 
         IStructureEntry entry = StructureManager.getInstance()
             .getCustomStructure(customStructureName);
+        updateComponentTiers(entry);
+    }
+
+    /**
+     * Updates component tiers based on the provided structure entry.
+     * Package-private for testing purposes.
+     */
+    void updateComponentTiers(IStructureEntry entry) {
+        componentTiers.clear();
         if (entry == null) return;
 
         Map<Character, ISymbolMapping> mappings = entry.getMappings();
-        for (Map.Entry<Character, List<ChunkCoordinates>> symbolEntry : controller.getSymbolPositionsMap()
-            .entrySet()) {
+        for (Map.Entry<Character, List<ChunkCoordinates>> symbolEntry : getSymbolPositionsMap().entrySet()) {
             char symbol = symbolEntry.getKey();
             ISymbolMapping mapping = mappings.get(symbol);
 
@@ -338,10 +349,8 @@ public class StructureAgent {
                 int minTierForSymbol = Integer.MAX_VALUE;
 
                 for (ChunkCoordinates pos : symbolEntry.getValue()) {
-                    Block block = controller.getWorldObj()
-                        .getBlock(pos.posX, pos.posY, pos.posZ);
-                    int meta = controller.getWorldObj()
-                        .getBlockMetadata(pos.posX, pos.posY, pos.posZ);
+                    Block block = getWorldObj().getBlock(pos.posX, pos.posY, pos.posZ);
+                    int meta = getWorldObj().getBlockMetadata(pos.posX, pos.posY, pos.posZ);
                     String blockId = Block.blockRegistry.getNameForObject(block) + ":" + meta;
 
                     int tier = tiered.getTier(blockId);
@@ -602,6 +611,16 @@ public class StructureAgent {
         }
 
         return loadedBlocks;
+    }
+
+    // ========== Internal Hooks for Testing ==========
+
+    public Map<Character, List<ChunkCoordinates>> getSymbolPositionsMap() {
+        return controller.getSymbolPositionsMap();
+    }
+
+    public World getWorldObj() {
+        return controller.getWorldObj();
     }
 
 }
