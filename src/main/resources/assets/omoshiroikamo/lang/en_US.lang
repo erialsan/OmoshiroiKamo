@@ -52,13 +52,11 @@ gui.craftingState.idle=Idle
 gui.craftingState.running=Running
 gui.craftingState.error=Error
 
-
 # Redstone mode
 gui.redstone_mode.always_on=Always on
 gui.redstone_mode.high_on=On with redstone signal
 gui.redstone_mode.high_off=Off with redstone signal
 gui.redstone_mode.always_off=Always off
-
 
 # Sort
 gui.sort_type.by_mod_id=Mod ID

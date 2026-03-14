@@ -17,7 +17,7 @@ I’d be thrilled to see them!
 Each backport module can be individually enabled or disabled in the config.
 
 - Environmental Tech (Clean-Room Rewrite)
-- Chickens, More Chickens and Roost (Backport)
+- Chickens, More Chickens and Roost (Backport) [Extracted Mod](https://github.com/Shigure-Ruiseki/OKBackpack)
 - Fluid Cows (Backport WIP)
 - RetroSophisticated Backpacks (Backport)
 - Modular Machinery (Basic function only for now)
