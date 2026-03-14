@@ -133,7 +133,6 @@
             ],
             "decorators": [
                 {
-                    "type": "bonus",
                     "chance": 1.0,
                     "outputs": [
                         {
