@@ -145,13 +145,49 @@ public class ExpressionParser {
         while (true) {
             String op = "";
             if (eat('=')) {
-                if (eat('=')) op = "==";
-                else throw error("Expected '=='");
+                if (eat('=')) {
+                    op = "==";
+                } else {
+                    // Check for assignment (single '=')
+                    return parseAssignment(x, "=");
+                }
             } else if (eat('!')) {
                 if (eat('=')) {
                     op = "!=";
                 } else {
                     pos--; // Backtrack '!'
+                    nextChar();
+                    return x;
+                }
+            } else if (eat('+')) {
+                if (eat('=')) {
+                    return parseAssignment(x, "+=");
+                } else {
+                    pos--; // Backtrack '+'
+                    nextChar();
+                    return x;
+                }
+            } else if (eat('-')) {
+                if (eat('=')) {
+                    return parseAssignment(x, "-=");
+                } else {
+                    pos--; // Backtrack '-'
+                    nextChar();
+                    return x;
+                }
+            } else if (eat('*')) {
+                if (eat('=')) {
+                    return parseAssignment(x, "*=");
+                } else {
+                    pos--; // Backtrack '*'
+                    nextChar();
+                    return x;
+                }
+            } else if (eat('/')) {
+                if (eat('=')) {
+                    return parseAssignment(x, "/=");
+                } else {
+                    pos--; // Backtrack '/'
                     nextChar();
                     return x;
                 }
@@ -165,9 +201,41 @@ public class ExpressionParser {
                 return x;
             }
 
-            Object y = parseExpression();
-            x = new ComparisonCondition(asExpression(x), asExpression(y), op);
+            if (!op.isEmpty()) {
+                Object y = parseExpression();
+                x = new ComparisonCondition(asExpression(x), asExpression(y), op);
+            }
         }
+    }
+
+    /**
+     * Parse assignment operator (=, +=, -=, *=, /=).
+     * Left-hand side must be an NbtExpression.
+     */
+    private Object parseAssignment(Object left, String operation) {
+        // Extract NBT key from left-hand side
+        String nbtKey = null;
+        if (left instanceof NbtExpression) {
+            // For now, we need to extract the key from NbtExpression
+            // This is a simplification - in production, NbtExpression should expose its key
+            nbtKey = extractNbtKey((NbtExpression) left);
+        }
+
+        if (nbtKey == null) {
+            throw error("Assignment left-hand side must be nbt('key')");
+        }
+
+        // Parse right-hand side
+        Object right = parseExpression();
+
+        return new NBTAssignmentExpression(nbtKey, asExpression(right), operation);
+    }
+
+    /**
+     * Extract NBT key from NbtExpression.
+     */
+    private String extractNbtKey(NbtExpression expr) {
+        return expr.getNbtKey();
     }
 
     // expression = term ( ( "+" | "-" ) term )*
@@ -200,7 +268,21 @@ public class ExpressionParser {
         }
 
         int startPos = this.pos;
-        if (eat('(') || eat('{')) { // parentheses or braces
+        // String literals: 'text' or "text"
+        if (ch == '\'' || ch == '"') {
+            char quote = (char) ch;
+            nextChar(); // skip opening quote
+            int strStart = this.pos;
+            while (ch != quote && ch != -1) {
+                nextChar();
+            }
+            if (ch != quote) {
+                throw error("Expected closing quote '" + quote + "'");
+            }
+            String stringValue = input.substring(strStart, this.pos);
+            nextChar(); // skip closing quote
+            return new StringLiteralExpression(stringValue);
+        } else if (eat('(') || eat('{')) { // parentheses or braces
             char close = (input.charAt(pos - 1) == '(') ? ')' : '}';
             Object res = parseLogicalOr();
             if (!eat(close)) throw error("Expected closing '" + close + "'");
