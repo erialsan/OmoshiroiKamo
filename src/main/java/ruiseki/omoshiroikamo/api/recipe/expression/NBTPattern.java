@@ -4,7 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagByte;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagInt;
+import net.minecraft.nbt.NBTTagShort;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -35,7 +38,8 @@ public class NBTPattern {
     }
 
     /**
-     * Check if this pattern matches the given NBT compound.
+     * Check if this pattern matches the given NBT compound exactly.
+     * All patterns (REQUIRE, SET, MODIFY, REMOVE) must match.
      *
      * @param item The NBT compound to check
      * @return True if all pattern conditions are met
@@ -44,33 +48,57 @@ public class NBTPattern {
         if (item == null) return false;
 
         for (Map.Entry<String, ValuePattern> entry : patterns.entrySet()) {
-            String key = entry.getKey();
-            ValuePattern pattern = entry.getValue();
+            if (!entry.getValue()
+                .matches(item, entry.getKey(), true)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
-            if (!item.hasKey(key)) {
-                // Missing key - only matches if pattern allows it
-                if (pattern.operation != OperationType.REMOVE) {
+    /**
+     * Check if this item is a valid target for application/update.
+     * If REQUIRE patterns exist, they take precedence.
+     * If not, other patterns (SET, etc.) act as basic filters.
+     *
+     * @param item The NBT compound to check
+     * @return True if the item is a valid target
+     */
+    public boolean matchesForUpdate(NBTTagCompound item) {
+        if (item == null) return false;
+
+        boolean hasRequire = patterns.values()
+            .stream()
+            .anyMatch(p -> p.operation == OperationType.REQUIRE);
+
+        for (Map.Entry<String, ValuePattern> entry : patterns.entrySet()) {
+            ValuePattern pattern = entry.getValue();
+            String key = entry.getKey();
+
+            if (hasRequire) {
+                // If REQUIRE exists, ONLY REQUIRE patterns filter targets (strictly).
+                if (pattern.operation == OperationType.REQUIRE && !pattern.matches(item, key, true)) {
                     return false;
                 }
             } else {
-                if (!pattern.matches(item, key)) {
+                // If NO REQUIRE, ALL patterns filter targets but in non-strict mode.
+                // This allows updating existing items (like incrementing Count in Slot 0).
+                if (!pattern.matches(item, key, false)) {
                     return false;
                 }
             }
         }
-
         return true;
     }
 
     /**
      * Apply this pattern's modifications to the given NBT compound.
-     * Only applies if the pattern matches.
      *
      * @param item The NBT compound to modify
      * @return True if the pattern was applied
      */
     public boolean apply(NBTTagCompound item) {
-        if (item == null || !matches(item)) return false;
+        if (item == null) return false;
 
         for (Map.Entry<String, ValuePattern> entry : patterns.entrySet()) {
             String key = entry.getKey();
@@ -125,6 +153,10 @@ public class NBTPattern {
         return new NBTPattern(patterns, primaryOp);
     }
 
+    public Map<String, ValuePattern> getPatterns() {
+        return patterns;
+    }
+
     /**
      * Represents a value pattern for a single NBT key.
      */
@@ -140,15 +172,66 @@ public class NBTPattern {
             this.value = value;
         }
 
+        public OperationType getOperationType() {
+            return operation;
+        }
+
+        public Object getValue() {
+            return value;
+        }
+
         /**
-         * Check if the value in the NBT matches this pattern.
+         * Check if the value in the NBT matches this pattern for filtering purposes.
+         * 
+         * @param nbt    The NBT compound
+         * @param key    The key to check
+         * @param strict If true, performing strict equality check even for SET
+         *               operations.
+         * @return True if matches
          */
-        public boolean matches(NBTTagCompound nbt, String key) {
-            if (operation == OperationType.REQUIRE) {
-                return checkCondition(nbt, key);
+        public boolean matches(NBTTagCompound nbt, String key, boolean strict) {
+            if (!nbt.hasKey(key)) return false;
+
+            switch (operation) {
+                case REQUIRE:
+                    return checkCondition(nbt, key);
+                case SET:
+                    // Minecraft specific heuristics
+                    // These keys identify unique items/slots/enchants.
+                    // They must match strictly even during target identification (non-strict mode).
+                    if (key.equals("id") || key.equals("Slot") || key.equals("Name")) {
+                        return checkEquality(nbt, key);
+                    }
+                    // For other keys, allow non-strict match to permit updates.
+                    return !strict || checkEquality(nbt, key);
+                default:
+                    // For MODIFY/REMOVE, existence is already checked above.
+                    return true;
             }
-            // For non-require operations, any value matches
-            return true;
+        }
+
+        private boolean checkEquality(NBTTagCompound nbt, String key) {
+            double current;
+            NBTBase tag = nbt.getTag(key);
+            if (tag instanceof NBTTagInt) current = ((NBTTagInt) tag).func_150287_d();
+            else if (tag instanceof NBTTagShort) current = ((NBTTagShort) tag).func_150289_e();
+            else if (tag instanceof NBTTagByte) current = ((NBTTagByte) tag).func_150290_f();
+            else current = nbt.getDouble(key);
+
+            if (value instanceof Number) {
+                double target = ((Number) value).doubleValue();
+                return Math.abs(current - target) < 0.01;
+            } else if (value instanceof String) {
+                String str = (String) value;
+                try {
+                    double target = Double.parseDouble(str);
+                    return Math.abs(current - target) < 0.01;
+                } catch (NumberFormatException e) {
+                    return nbt.getString(key)
+                        .equals(str);
+                }
+            }
+            return false;
         }
 
         /**
@@ -187,9 +270,9 @@ public class NBTPattern {
                 case "<":
                     return current < target;
                 case "==":
-                    return current == target;
+                    return Math.abs(current - target) < 0.0001;
                 case "!=":
-                    return current != target;
+                    return Math.abs(current - target) >= 0.0001;
                 default:
                     return false;
             }

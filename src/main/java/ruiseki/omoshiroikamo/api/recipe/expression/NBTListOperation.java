@@ -134,16 +134,16 @@ public class NBTListOperation {
         // Try to find and modify existing items
         for (int i = 0; i < list.tagCount(); i++) {
             NBTTagCompound item = list.getCompoundTagAt(i);
-            if (pattern.matches(item)) {
+            // Use matchesForUpdate to identify the item even if SET value differs (to allow
+            // update)
+            if (pattern.matchesForUpdate(item)) {
                 pattern.apply(item);
                 found = true;
-                // For MODIFY, apply to all matching items
-                // For SET, could optionally break after first match
             }
         }
 
         // If SET pattern and no matching item found, add new item
-        if (!found && pattern.getOperationType() == OperationType.SET) {
+        if (!found && pattern.getOperationType() == NBTPattern.OperationType.SET) {
             NBTTagCompound newItem = new NBTTagCompound();
             pattern.apply(newItem);
             list.appendTag(newItem);

@@ -130,6 +130,48 @@ public class RegistryMocker {
         setStaticFinalField(Items.class, "sapling", createMockItem("sapling"));
         setStaticFinalField(Items.class, "log", createMockItem("log"));
         setStaticFinalField(Items.class, "gold_nugget", createMockItem("gold_nugget"));
+
+        // Add weapons and tools for testing
+        setStaticFinalField(Items.class, "diamond_sword", createMockItem("diamond_sword"));
+        setStaticFinalField(Items.class, "iron_sword", createMockItem("iron_sword"));
+        setStaticFinalField(Items.class, "name_tag", createMockItem("name_tag"));
+        setStaticFinalField(Items.class, "enchanted_book", createMockItem("enchanted_book"));
+        setStaticFinalField(Items.class, "glowstone_dust", createMockItem("glowstone_dust"));
+        setStaticFinalField(Items.class, "water_bucket", createMockItem("water_bucket"));
+
+        // Mock Item.itemRegistry for string-to-item resolution
+        mockItemRegistry();
+    }
+
+    private static void mockItemRegistry() throws Exception {
+        try {
+            Class<?> registryNamespaceClass = Class.forName("net.minecraft.util.RegistryNamespaced");
+            Constructor<?> constructor = registryNamespaceClass.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            Object registryNamespaced = constructor.newInstance();
+
+            // Set Item.itemRegistry
+            setStaticFinalField(Item.class, "itemRegistry", registryNamespaced);
+
+            // Register items using reflection
+            Method registerMethod = registryNamespaceClass.getDeclaredMethod("putObject", Object.class, Object.class);
+            registerMethod.setAccessible(true);
+
+            // Register common items
+            if (Items.diamond_sword != null) registerMethod.invoke(registryNamespaced, "minecraft:diamond_sword", Items.diamond_sword);
+            if (Items.iron_sword != null) registerMethod.invoke(registryNamespaced, "minecraft:iron_sword", Items.iron_sword);
+            if (Items.diamond != null) registerMethod.invoke(registryNamespaced, "minecraft:diamond", Items.diamond);
+            if (Items.iron_ingot != null) registerMethod.invoke(registryNamespaced, "minecraft:iron_ingot", Items.iron_ingot);
+            if (Items.gold_ingot != null) registerMethod.invoke(registryNamespaced, "minecraft:gold_ingot", Items.gold_ingot);
+            if (Items.name_tag != null) registerMethod.invoke(registryNamespaced, "minecraft:name_tag", Items.name_tag);
+            if (Items.enchanted_book != null) registerMethod.invoke(registryNamespaced, "minecraft:enchanted_book", Items.enchanted_book);
+            if (Items.glowstone_dust != null) registerMethod.invoke(registryNamespaced, "minecraft:glowstone_dust", Items.glowstone_dust);
+            if (Items.water_bucket != null) registerMethod.invoke(registryNamespaced, "minecraft:water_bucket", Items.water_bucket);
+
+            System.out.println("RegistryMocker: Successfully mocked Item.itemRegistry");
+        } catch (Exception e) {
+            Logger.warn("RegistryMocker: Failed to mock Item.itemRegistry: " + e.getMessage());
+        }
     }
 
     private static void mockBlocks() throws Exception {

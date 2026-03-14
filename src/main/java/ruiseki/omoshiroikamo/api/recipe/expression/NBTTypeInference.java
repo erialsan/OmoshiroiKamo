@@ -78,8 +78,8 @@ public class NBTTypeInference {
         // No suffix, infer type from value
         try {
             if (value.contains(".")) {
-                // Decimal -> Float by default
-                return new NBTTagFloat(Float.parseFloat(value));
+                // Decimal -> Double by default (higher precision)
+                return new NBTTagDouble(Double.parseDouble(value));
             } else {
                 // Integer -> Int by default
                 return new NBTTagInt(Integer.parseInt(value));
@@ -94,7 +94,7 @@ public class NBTTypeInference {
      * Parse a numeric value and create the appropriate NBTBase.
      *
      * @param value The numeric value
-     * @return The corresponding NBTBase object (Int or Float)
+     * @return The corresponding NBTBase object (Int or Double)
      */
     public static NBTBase parseNumeric(double value) {
         if (value == (int) value) {
@@ -102,7 +102,7 @@ public class NBTTypeInference {
             return new NBTTagInt((int) value);
         } else {
             // Decimal value
-            return new NBTTagFloat((float) value);
+            return new NBTTagDouble(value);
         }
     }
 
