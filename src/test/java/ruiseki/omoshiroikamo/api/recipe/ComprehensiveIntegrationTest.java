@@ -12,7 +12,24 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import ruiseki.omoshiroikamo.api.recipe.io.*;
+import ruiseki.omoshiroikamo.api.recipe.io.BlockInput;
+import ruiseki.omoshiroikamo.api.recipe.io.BlockOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.EnergyInput;
+import ruiseki.omoshiroikamo.api.recipe.io.EnergyOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.EssentiaInput;
+import ruiseki.omoshiroikamo.api.recipe.io.EssentiaOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.FluidInput;
+import ruiseki.omoshiroikamo.api.recipe.io.FluidOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.GasInput;
+import ruiseki.omoshiroikamo.api.recipe.io.GasOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.IRecipeInput;
+import ruiseki.omoshiroikamo.api.recipe.io.IRecipeOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.ItemInput;
+import ruiseki.omoshiroikamo.api.recipe.io.ItemOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.ManaInput;
+import ruiseki.omoshiroikamo.api.recipe.io.ManaOutput;
+import ruiseki.omoshiroikamo.api.recipe.io.VisInput;
+import ruiseki.omoshiroikamo.api.recipe.io.VisOutput;
 import ruiseki.omoshiroikamo.test.RegistryMocker;
 
 /**
