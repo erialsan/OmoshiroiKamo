@@ -19,7 +19,7 @@ Each backport module can be individually enabled or disabled in the config.
 - Environmental Tech (Clean-Room Rewrite)
 - Chickens, More Chickens and Roost (Backport)
 - Fluid Cows (Backport WIP)
-- RetroSophisticated Backpacks (Backport)
+- RetroSophisticated Backpacks (Backport) [Extracted Mod](https://github.com/Shigure-Ruiseki/OKBackpack)
 - Modular Machinery (Basic function only for now)
 - Deep Mob Learning
 - Cable system from Integrated Dynamics
