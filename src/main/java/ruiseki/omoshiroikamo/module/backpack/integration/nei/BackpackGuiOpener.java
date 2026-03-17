@@ -79,9 +79,9 @@ public class BackpackGuiOpener implements IContainerInputHandler {
         if (carried == null) return false;
 
         ItemStack stack = slot.getStack();
-        if (!(stack.getItem() instanceof BlockBackpack.ItemBackpack)) return false;
+        if (!(stack.getItem() instanceof BlockBackpack.ItemBackpack backpack)) return false;
 
-        BackpackWrapper wrapper = new BackpackWrapper(stack, null);
+        BackpackWrapper wrapper = new BackpackWrapper(stack, backpack);
         ItemStack remain = wrapper.insertItem(carried, false);
         if (remain == null || remain.stackSize <= 0) {
             player.inventory.setItemStack(null);
