@@ -21,7 +21,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 import ruiseki.omoshiroikamo.api.enums.EnumIO;
 import ruiseki.omoshiroikamo.api.modular.ISidedTexture;
 import ruiseki.omoshiroikamo.config.backport.MachineryConfig;
-import ruiseki.omoshiroikamo.core.common.util.RenderUtils;
+import ruiseki.omoshiroikamo.core.helper.RenderHelpers;
 import ruiseki.omoshiroikamo.core.tileentity.ISidedIO;
 import ruiseki.omoshiroikamo.module.machinery.common.block.AbstractPortBlock;
 import ruiseki.omoshiroikamo.module.machinery.common.block.BlockMachineController;
@@ -64,7 +64,7 @@ public class PortOverlayISBRH implements ISimpleBlockRenderingHandler {
 
         tess.startDrawingQuads();
         tess.setColorOpaque_F(r, g, b);
-        RenderUtils.renderCubeRotatedTopBottom(tess, 0, 0, 0, 1, 1, 1, baseIcon);
+        RenderHelpers.renderCubeRotatedTopBottom(tess, 0, 0, 0, 1, 1, 1, baseIcon);
         tess.draw();
 
         // Render Controller Overlay if applicable
@@ -78,7 +78,7 @@ public class PortOverlayISBRH implements ISimpleBlockRenderingHandler {
 
                 double eps = 0.001; // Slightly larger than base
                 tess.setNormal(1.0F, 0.0F, 0.0F);
-                RenderUtils.renderFaceCorrected(
+                RenderHelpers.renderFaceCorrected(
                     tess,
                     ForgeDirection.EAST,
                     0,
@@ -166,7 +166,7 @@ public class PortOverlayISBRH implements ISimpleBlockRenderingHandler {
                         flip = extFacing.getFlip();
                     }
 
-                    RenderUtils.renderFaceCorrected(t, dir, x, y, z, overlayIcon, EPS, rotation, flip);
+                    RenderHelpers.renderFaceCorrected(t, dir, x, y, z, overlayIcon, EPS, rotation, flip);
                 }
             }
         }
