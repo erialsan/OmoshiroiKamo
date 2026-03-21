@@ -14,7 +14,7 @@ import org.lwjgl.opengl.GL11;
 import com.gtnewhorizon.structurelib.alignment.enumerable.Flip;
 import com.gtnewhorizon.structurelib.alignment.enumerable.Rotation;
 
-import ruiseki.omoshiroikamo.core.common.util.RenderUtils;
+import ruiseki.omoshiroikamo.core.helper.RenderHelpers;
 import ruiseki.omoshiroikamo.module.machinery.common.block.BlockMachineController;
 import ruiseki.omoshiroikamo.module.machinery.common.item.AbstractPortItemBlock;
 
@@ -86,11 +86,12 @@ public class ItemPortRenderer implements IItemRenderer {
         if (allFaces) {
             for (ForgeDirection dir : ForgeDirection.VALID_DIRECTIONS) {
                 t.setNormal(dir.offsetX, dir.offsetY, dir.offsetZ);
-                RenderUtils.renderFaceCorrected(t, dir, 0, 0, 0, icon, 0.001f, Rotation.NORMAL, Flip.NONE);
+                RenderHelpers.renderFaceCorrected(t, dir, 0, 0, 0, icon, 0.001f, Rotation.NORMAL, Flip.NONE);
             }
         } else {
             t.setNormal(1.0F, 0.0F, 0.0F);
-            RenderUtils.renderFaceCorrected(t, ForgeDirection.EAST, 0, 0, 0, icon, 0.001f, Rotation.NORMAL, Flip.NONE);
+            RenderHelpers
+                .renderFaceCorrected(t, ForgeDirection.EAST, 0, 0, 0, icon, 0.001f, Rotation.NORMAL, Flip.NONE);
         }
         t.draw();
 
