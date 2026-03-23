@@ -5,13 +5,13 @@ import java.io.IOException;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.world.World;
 
 import com.cleanroommc.modularui.utils.item.PlayerMainInvWrapper;
 import com.cleanroommc.modularui.value.sync.SyncHandler;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.world.World;
 import ruiseki.omoshiroikamo.api.enums.SortType;
 import ruiseki.omoshiroikamo.module.backpack.common.block.BackpackPanel;
 import ruiseki.omoshiroikamo.module.backpack.common.block.BlockSleepingBag;
@@ -75,7 +75,8 @@ public class BackpackSH extends SyncHandler {
         if (id == UPDATE_SET_SORT_TYPE || id == UPDATE_SORT_INV
             || id == UPDATE_TRANSFER_TO_BACKPACK_INV
             || id == UPDATE_TRANSFER_TO_PLAYER_INV
-            || id == UPDATE_SETTING || id == DEPLOY_SLEEPING_BAG) {
+            || id == UPDATE_SETTING
+            || id == DEPLOY_SLEEPING_BAG) {
             wrapper.syncToServer();
         }
     }

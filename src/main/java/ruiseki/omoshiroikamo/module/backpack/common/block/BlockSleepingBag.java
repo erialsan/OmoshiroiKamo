@@ -1,7 +1,9 @@
 package ruiseki.omoshiroikamo.module.backpack.common.block;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import static ruiseki.omoshiroikamo.api.enums.ModObject.blockSleepingBag;
+
+import java.util.Random;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -19,17 +21,16 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.util.ForgeDirection;
+
 import org.apache.logging.log4j.Level;
+
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import ruiseki.omoshiroikamo.OmoshiroiKamo;
 import ruiseki.omoshiroikamo.core.block.BlockOK;
-import ruiseki.omoshiroikamo.core.lib.LibMisc;
 import ruiseki.omoshiroikamo.core.lib.LibResources;
 import ruiseki.omoshiroikamo.module.backpack.common.entity.properties.BackpackProperty;
 import ruiseki.omoshiroikamo.module.backpack.common.init.BackpackBlocks;
-
-import java.util.Random;
-
-import static ruiseki.omoshiroikamo.api.enums.ModObject.blockSleepingBag;
 
 public class BlockSleepingBag extends BlockOK {
 
@@ -116,7 +117,7 @@ public class BlockSleepingBag extends BlockOK {
 
     @Override
     public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float hitX,
-                                    float hitY, float hitZ) {
+        float hitY, float hitZ) {
         if (world.isRemote) {
             return true;
         } else {
@@ -314,13 +315,16 @@ public class BlockSleepingBag extends BlockOK {
     @Override
     @SideOnly(Side.CLIENT)
     public void registerBlockIcons(IIconRegister iconRegister) {
-        this.topIcons = new IIcon[] { iconRegister.registerIcon(LibResources.PREFIX_MOD + "backpack/sleepingBag_feet_top"),
+        this.topIcons = new IIcon[] {
+            iconRegister.registerIcon(LibResources.PREFIX_MOD + "backpack/sleepingBag_feet_top"),
             iconRegister.registerIcon(LibResources.PREFIX_MOD + "backpack/sleepingBag_head_top") };
 
-        this.endIcons = new IIcon[] { iconRegister.registerIcon(LibResources.PREFIX_MOD + "backpack/sleepingBag_feet_end"),
+        this.endIcons = new IIcon[] {
+            iconRegister.registerIcon(LibResources.PREFIX_MOD + "backpack/sleepingBag_feet_end"),
             iconRegister.registerIcon(LibResources.PREFIX_MOD + "backpack/sleepingBag_head_end") };
 
-        this.sideIcons = new IIcon[] { iconRegister.registerIcon(LibResources.PREFIX_MOD + "backpack/sleepingBag_feet_side"),
+        this.sideIcons = new IIcon[] {
+            iconRegister.registerIcon(LibResources.PREFIX_MOD + "backpack/sleepingBag_feet_side"),
             iconRegister.registerIcon(LibResources.PREFIX_MOD + "backpack/sleepingBag_head_side") };
     }
 

@@ -2,7 +2,6 @@ package ruiseki.omoshiroikamo.module.backpack.common.handler;
 
 import java.util.List;
 
-import ganymedes01.etfuturum.ModBlocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
@@ -14,8 +13,8 @@ import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.EntityEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-
 import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
+
 import org.joml.Vector3d;
 
 import com.cleanroommc.modularui.factory.inventory.InventoryType;
