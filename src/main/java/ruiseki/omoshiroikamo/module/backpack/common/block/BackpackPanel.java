@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.cleanroommc.modularui.widgets.ButtonWidget;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -336,8 +337,26 @@ public class BackpackPanel extends ModularPanel {
 
                     tooltip.pos(RichTooltip.Pos.NEXT_TO_MOUSE);
                 });
+        ButtonWidget<?> sleepButton = new ButtonWidget<>().bottom(84)
+            .right(35)
+            .size(14)
+            .overlay(OKGuiTextures.SLEEPING_BAG)
+            .setEnabledIf(shiftButtonWidget -> !settingPanel.isPanelOpen())
+            .onMousePressed(mouseButton -> {
+                if (mouseButton == 0) {
+                    backpackSyncHandler.syncToServer(BackpackSH.DEPLOY_SLEEPING_BAG);
+                    return true;
+                }
+                return false;
+            })
+            .tooltipAutoUpdate(true)
+            .tooltipDynamic(tooltip -> {
+                tooltip.addLine(IKey.lang("gui.backpack.sleeping_bag"));
+                tooltip.pos(RichTooltip.Pos.NEXT_TO_MOUSE);
+            });
 
-        child(transferToPlayerButton).child(transferToBackpackButton);
+        child(transferToPlayerButton).child(transferToBackpackButton)
+            .child(sleepButton);
     }
 
     public void addBackpackInventorySlots() {
