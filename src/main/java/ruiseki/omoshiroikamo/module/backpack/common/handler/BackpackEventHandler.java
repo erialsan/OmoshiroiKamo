@@ -73,7 +73,7 @@ public class BackpackEventHandler {
     }
 
     @SubscribeEvent
-    public void tickPlayer(TickEvent.PlayerTickEvent event) {
+    public static void tickPlayer(TickEvent.PlayerTickEvent event) {
         EntityPlayer player = event.player;
         if (player != null && !player.isDead) return;
         if (event.phase == TickEvent.Phase.END && player != null) {
